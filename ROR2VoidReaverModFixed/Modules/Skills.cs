@@ -188,7 +188,7 @@ namespace FubukiMods.Modules {
 							if (isMultiShot) {
 								for (int j = 0; j < _numBulletsPerCluster; j++) {
 									ProjectileManager.instance.FireProjectile(GetVoidPrimaryFireInfo(aimRay, this));
-									aimRay.direction = Util.ApplySpread(aimRay.direction, _spread.x, _spread.y, 0.4f, 0.4f, 0f, 0f);
+									aimRay.direction = Util.ApplySpread(aimRay.direction, _spread.x, _spread.y, 0.5f, 0.5f, 0f, 0f);
 									// Note: It is intentional that this affects the already spread direction.
 								}
 							} else {
@@ -227,11 +227,13 @@ namespace FubukiMods.Modules {
 				Util.PlayAttackSpeedSound(FireLunarNeedle.fireSound, gameObject, 1.25f);
 				if (isAuthority) {
 					float arcLen = Configuration.SpreadShotArcLengthDegs;
-					float horzSpreadFactor = -arcLen;
-					for (int i = 0; i < 5; i++) {
+					int numBullets = Configuration.BulletsPerSpreadShot;
+					float increment = arcLen / numBullets;
+					float horzSpreadFactor = (-arcLen / 2) + (increment / 2);
+					for (int i = 0; i < numBullets; i++) {
 						Ray aimRay = GetAimRay();
 						aimRay.direction = Util.ApplySpread(aimRay.direction, _spread.x, _spread.y, 1f, 1f, horzSpreadFactor, 0f);
-						horzSpreadFactor += arcLen / 2; // TODO: When making the number of bullets configurable, this will need to be changed.
+						horzSpreadFactor += increment;
 						ProjectileManager.instance.FireProjectile(GetVoidPrimaryFireInfo(aimRay, this));
 						AddRecoil(-0.1f, -0.2f, -0.075f, 0.075f);
 					}

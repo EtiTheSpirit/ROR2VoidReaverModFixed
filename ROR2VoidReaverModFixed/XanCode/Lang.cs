@@ -83,9 +83,13 @@ namespace ROR2VoidReaverModFixed.XanCode {
 			LanguageAPI.Add(SURVIVOR_OUTRO, "..and so it left, its first impression of life familiarly destructive.");
 
 			LanguageAPI.Add(SKILL_PRIMARY_TRIPLESHOT_NAME, "<style=cIsVoid>Void Impulse</style>");
-			LanguageAPI.Add(SKILL_PRIMARY_TRIPLESHOT_DESC, $"Fire 3 <style=cIsVoid>void pearls</style> in quick succession that hit twice for <style=cIsDamage>2x{Percentage(Configuration.BasePrimaryDamage/2)} damage</style>. <style=cIsUtility>Attack speed</style> increases the number of pearls per volley.");
+			if (Configuration.UseExperimentalSequenceShotBuff) {
+				LanguageAPI.Add(SKILL_PRIMARY_TRIPLESHOT_DESC, $"Fire <style=cUserSetting>{Configuration.BulletsPerImpulseShot}</style> bursts of <style=cIsVoid>void pearls</style> in quick succession that hit twice for <style=cIsDamage>2x{Percentage(Configuration.BasePrimaryDamage / 2)} damage</style>. <style=cIsUtility>Attack speed</style> increases <style=cIsUtility>the number of pearls</style> fired in each burst.");
+			} else {
+				LanguageAPI.Add(SKILL_PRIMARY_TRIPLESHOT_DESC, $"Fire <style=cUserSetting>{Configuration.BulletsPerImpulseShot}</style> <style=cIsVoid>void pearls</style> in quick succession that hit twice for <style=cIsDamage>2x{Percentage(Configuration.BasePrimaryDamage / 2)} damage</style>. <style=cIsUtility>Attack speed</style> increases <style=cIsUtility>the number of pearls</style> that are fired.");
+			}
 			LanguageAPI.Add(SKILL_PRIMARY_SPREAD_NAME, "<style=cIsVoid>Void Spread</style>");
-			LanguageAPI.Add(SKILL_PRIMARY_SPREAD_DESC, $"Fire 5 <style=cIsVoid>void pearls</style> that each hit twice for <style=cIsDamage>2x{Percentage(Configuration.BasePrimaryDamage/2)} damage</style>. The pearls are shot with a uniform <style=cUserSetting>{Round(Configuration.SpreadShotArcLengthDegs)} degree horizontal spread</style> between each pearl.");
+			LanguageAPI.Add(SKILL_PRIMARY_SPREAD_DESC, $"Fire <style=cUserSetting>{Configuration.BulletsPerSpreadShot}</style> <style=cIsVoid>void pearls</style> that each hit twice for <style=cIsDamage>2x{Percentage(Configuration.BasePrimaryDamage/2)} damage</style>. The pearls are shot in a <style=cUserSetting>{Round(Configuration.SpreadShotArcLengthDegs)} degree horizontal spread</style>.");
 
 			LanguageAPI.Add(SKILL_SECONDARY_NAME, "<style=cIsVoid>Undertow</style>");
 			LanguageAPI.Add(SKILL_SECONDARY_DESC, $"Create a cluster of <style=cUserSetting>{Configuration.SecondaryCount}</style> bombs that each deal <style=cIsDamage>{Percentage(Configuration.BaseSecondaryDamage)} damage</style>. Inflicts <style=cIsVoid>Nullify Stack</style>. <style=cIsUtility>Attack speed</style> increases the number of bombs and the placement radius.");

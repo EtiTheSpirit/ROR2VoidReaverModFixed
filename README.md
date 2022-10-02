@@ -1,5 +1,5 @@
 # Void Reaver Player Character
-An official contiuation of [LuaFubuki's Void Reaver Mod](https://thunderstore.io/package/LuaFubuki/Void_Reaver/) that integrates my extensions' features as standard abilities. This also fixes a number of bugs caused by various naming issues (among other things), introduces the ability to localize the mod, introduces survivor lore, and introduces more configuration options.
+An expansion upon [LuaFubuki's Void Reaver Mod](https://thunderstore.io/package/LuaFubuki/Void_Reaver/) that integrates my extensions' features as standard abilities. This also fixes a number of bugs, introduces survivor lore, and introduces more configuration options.
 
 ## Introduction
 Please take your time to give thanks to LuaFubuki for allowing me to continue their work. Without their work (and the interest of some of my friends + myself), and their willingness to allow me to continue where they left off, this would not have been created.
@@ -7,20 +7,33 @@ Please take your time to give thanks to LuaFubuki for allowing me to continue th
 **Currently, this mod is in a slight testing phase.** Most of it works but there's gonna be inevitable kinks to iron out.
 
 ## Features
-* All abilities of the current Void Reaver mod (with the exception of the legacy Lunar alt abilities, which have yet to be implemented).
+* All abilities of LuaFubuki's original Void Reaver mod (with the exception of the legacy Lunar alt abilities, which have yet to be implemented).
 * The addition of the **Collapse** special, the more aggressive alternative to **Reave**. Kill yourself ~~immediately~~ to trigger the Void Reaver's death implosion.
 * Dozens of tweaks to behavior and fixes to mild issues.
-* Tons of new configuration options to personalize the experience.
+* Tons of new configuration options to personalize your experience.
 * As implied, dying will cause the implosion. Use this to your advantage!
 * Slight tweaks to animations. Firing will no longer twist your body, allowing you to be the sentry you always dreamed of being.
 
 ## Known Bugs
-* Anticipating issues for Full Size option (this may be removed in the future, it's more of a test for giggles)
-* No bugs are currently known otherwise.
+* I anticipate issues for Full Size option (this may be removed in the future, it's more of a test for giggles)
+* Bustling Fungus has difficulty activating. It plays the sound but does not spawn the AoE unless you are on flat ground. This is likely due to the hitbox placement of the character.
 
 ## Changelog
-### 1.1.0
+### 1.1.1
+Includes a change I meant to include in 1.1.0 but forgot to add. Nice.
 
+#### UI Changes
+* Rephrased some mod information that was accidentally misleading.
+* Rephrased the description of Void Impulse to reflect upon the new behavior. This should make it much easier to understand.
+
+#### Ability Changes (Primary)
+* Added a configuration option to change the number of shots fired in Void Spread.
+* Changed the configuration option for the spread angle of Void Spread so that it is the entire angle rather than the individual increment between bullets. This way you don't have to do *math* to find the correct angle.
+
+#### Ability Changes (Special)
+* Nerfed the default damage of Reave (100x => 60x) which better suits the health cost. Collapse was not changed.
+
+### 1.1.0
 1.1.0 comes with a lot of very big changes and so many users will need to review their configuration files. It is recommended to delete it and let the mod regenerate it.
 
 Some stuff still isn't configurable, but it will be later.

@@ -43,6 +43,7 @@ namespace ROR2VoidReaverModFixed.XanCode {
 		public static Vector2 PrimarySpreadShotSpread => _primarySpreadShotSpread.Value;
 		public static float PrimaryImpulseShotTime => _primaryImpulseShotTime.Value;
 		public static int BulletsPerImpulseShot => _primaryImpulseBulletCount.Value;
+		public static int BulletsPerSpreadShot => _primarySpreadBulletCount.Value;
 		public static float SpreadShotArcLengthDegs => _primarySpreadArcDegrees.Value;
 
 		public static float BaseSecondaryDamage => _baseSecondaryDamage.Value;
@@ -145,6 +146,7 @@ namespace ROR2VoidReaverModFixed.XanCode {
 		private static ConfigEntry<bool> _reaveImmunity;
 		//private static ConfigEntry<bool> _reaveCostIsAbsolute;
 		private static ConfigEntry<int> _primaryImpulseBulletCount;
+		private static ConfigEntry<int> _primarySpreadBulletCount;
 		private static ConfigEntry<float> _primarySpreadArcDegrees;
 		private static ConfigEntry<bool> _useLegacyLunarBase;
 		private static ConfigEntry<bool> _primaryUseExperimentalTripleshotBuff;
@@ -195,8 +197,9 @@ namespace ROR2VoidReaverModFixed.XanCode {
 
 			_basePrimaryDamage = cfg.Bind("3a. Character Primary", "Base Primary Damage", 1f, StaticDeclareConfigDescription(string.Format(FMT_DEFAULT, "primary attack damage output") + " Since damage is dealt in two ticks, each tick doing half damage, this value is the total of both ticks combined.", new AcceptableMinimum<float>()));
 			_primaryImpulseBulletCount = cfg.Bind("3a. Character Primary", "Bullets Per Impulse Shot", 3, StaticDeclareConfigDescription("When using Void Impulse as your primary, this is the amount of bullets fired per shot by default.", new AcceptableMinimum<int>(1)));
-			_primarySpreadArcDegrees = cfg.Bind("3a. Character Primary", "Spread Shot Arc Length", 8f, "When using Void Spread as your primary, this value, measured in degrees, represents the angle between each of the five bullets in the spread individually.");
 			_primaryImpulseSpread = cfg.Bind("3a. Character Primary", "Impulse Spread Factor", new Vector2(0, 1), StaticDeclareConfigDescription("The X component is the minimum spread, and the Y component is the maximum spread, of bullets shot with Void Impulse. Both are measured in degrees.", new AcceptableUserDefinedMinMax()));
+			_primarySpreadArcDegrees = cfg.Bind("3a. Character Primary", "Void Spread Total Arc Length", 40f, "When using Void Spread as your primary, this value, measured in degrees, represents the angle between each of the five bullets in the spread. This angle is divided upon them evenly.");
+			_primarySpreadBulletCount = cfg.Bind("3a. Character Primary", "Void Spread Bullets Per Shot", 5, StaticDeclareConfigDescription("Void Spread will fire this many projectiles in a horizontal fan. NOTE: It's a good idea for this value to be an odd number, so at least one bullet goes directly towards the crosshair.", new AcceptableMinimum<int>(1)));
 			_primarySpreadShotSpread = cfg.Bind("3a. Character Primary", "Void Spread Spread Factor", new Vector2(0, 0.2f), StaticDeclareConfigDescription("The X component is the minimum spread, and the Y component is the maximum spread, of bullets shot with Void Spread. Both are measured in degrees.", new AcceptableUserDefinedMinMax()));
 			_primaryImpulseShotTime = cfg.Bind("3a. Character Primary", "Impulse Shot Time", 0.3f, StaticDeclareConfigDescription("Void Impulse will try to fire all of its bullets in this amount of time.", new AcceptableValueRange<float>(0, 1)));
 			_primaryUseExperimentalTripleshotBuff = cfg.Bind("3a. Character Primary", "Void Impulse Bulking", true, "Previously, Void Impulse would increase the number of bullets fired in a constant timespan (Impulse Shot Time) as attack speed increased. If this is enabled, this behavior is altered so that it prefers shooting the defined burst count (Bullets Per Impulse Shot), adding more bullets to each individual shot so that it's more like a sequence of shotgun bursts.");
@@ -208,7 +211,7 @@ namespace ROR2VoidReaverModFixed.XanCode {
 			//_levelSecondaryDamage = cfg.Bind("3b. Character Secondary", "Leveled Secondary Damage", 0.125f, string.Format(FMT_LEVELED, "secondary attack damage output"));
 			_secondaryCooldown = cfg.Bind("3b. Character Secondary", "Secondary Cooldown", 5f, StaticDeclareConfigDescription("The amount of time, in seconds, that the player must wait before one stock of their secondary recharges.", new AcceptableMinimum<float>()));
 			
-			_baseSpecialDamage = cfg.Bind("3c. Character Special", "Base Special Damage", 100f, StaticDeclareConfigDescription(string.Format(FMT_DEFAULT, "special attack damage output") + " Note that this does not apply to the death effect. As such, this strictly affects the \"Reave\" ability.", new AcceptableMinimum<float>()));
+			_baseSpecialDamage = cfg.Bind("3c. Character Special", "Base Special Damage", 60f, StaticDeclareConfigDescription(string.Format(FMT_DEFAULT, "special attack damage output") + " Note that this does not apply to the death effect. As such, this strictly affects the \"Reave\" ability.", new AcceptableMinimum<float>()));
 			//_levelSpecialDamage = cfg.Bind("3c. Character Special", "Leveled Special Damage", 1.5f, string.Format(FMT_LEVELED, "special attack damage output") + " Note that this does not apply to the death effect. As such, this strictly affects the \"Reave\" ability.");
 			_specialCooldown = cfg.Bind("3c. Character Special", "Special Cooldown", 30f, StaticDeclareConfigDescription("The amount of time, in seconds, that the player must wait before one stock of their special recharges.", new AcceptableMinimum<float>()));
 			

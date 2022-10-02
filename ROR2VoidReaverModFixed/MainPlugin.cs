@@ -17,7 +17,7 @@ namespace FubukiMods {
 	})]
 	[BepInDependency("com.bepis.r2api", BepInDependency.DependencyFlags.HardDependency)]
 	[NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod, VersionStrictness.EveryoneNeedSameModVersion)]
-	[BepInPlugin("com.Fubuki.VoidReaver.XansEdit", "Void Reaver Survivor (Xan's Edit)", "1.1.0")]
+	[BepInPlugin("com.Fubuki.VoidReaver.XansEdit", "Void Reaver Survivor (Xan's Edit)", "1.1.1")]
 	public class MainPlugin : BaseUnityPlugin {
 
 		void Awake() {
