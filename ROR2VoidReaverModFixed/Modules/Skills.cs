@@ -598,8 +598,8 @@ namespace FubukiMods.Modules {
 				}
 
 				// Schedule the character model for deletion after 2.5s
-				if (modelLocator.modelTransform.gameObject) {
-					Object.Destroy(modelLocator.modelTransform.gameObject, REAVE_DURATION);
+				if (cachedModelTransform.gameObject) {
+					Object.Destroy(cachedModelTransform.gameObject, REAVE_DURATION);
 				}
 			}
 		}
