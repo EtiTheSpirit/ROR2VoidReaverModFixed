@@ -56,8 +56,9 @@ namespace FubukiMods.Modules
 				characterCameraParams.data.idealLocalCameraPos = new Vector3(0f, 4f, -16f);
 				characterCameraParams.data.pivotVerticalOffset = 0f;
 			}
-
 			playerBodyPrefab.GetComponent<SetStateOnHurt>().canBeHitStunned = false;
+
+			ContentAddition.AddEntityState<Skills.VoidDeath>(out _);
 			CharacterDeathBehavior deathBehavior = playerBodyPrefab.GetComponent<CharacterDeathBehavior>();
 			deathBehavior.deathState = new SerializableEntityStateType(typeof(Skills.VoidDeath));
 			

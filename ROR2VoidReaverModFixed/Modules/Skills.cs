@@ -585,7 +585,7 @@ namespace FubukiMods.Modules {
 				PlayCrossfade("Body", "Death", "Death.playbackRate", REAVE_DURATION, 0.1f);
 
 				if (isAuthority) {
-					Transform muzzleTransform = FindModelChild(DeathState.muzzleName);
+					Transform muzzleTransform = FindModelChild(DeathState.muzzleName).Or(gameObject.transform);
 					if (muzzleTransform != null) {
 						ProjectileManager.instance.FireProjectile(GetVoidExplosionFireInfo(
 							this,
