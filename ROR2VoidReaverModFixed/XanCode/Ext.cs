@@ -6,7 +6,7 @@ namespace ROR2VoidReaverModFixed.XanCode {
 	/// <summary>
 	/// Some unity utilities oriented towards its weird handling of <see cref="GameObject"/> and <see langword="null"/>.
 	/// </summary>
-	public static class Coercion {
+	public static class Ext {
 
 		/// <summary>
 		/// Implements null coalescense into Unity objects.<para/>
@@ -21,6 +21,29 @@ namespace ROR2VoidReaverModFixed.XanCode {
 		/// <returns></returns>
 		#pragma warning disable IDE0029
 		public static T? Or<T>(this T? left, T? right) where T : Object => left == null ? right : left;
+
+		/// <summary>
+		/// Attempts to get an instance of <typeparamref name="T"/> from the given <see cref="GameObject"/>, creating it if no such component exists.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="onObject"></param>
+		/// <returns></returns>
+		public static T GetOrCreateComponent<T>(this GameObject onObject, out bool createdNew) where T : Component {
+			T existing = onObject.GetComponent<T>();
+			if (existing) {
+				createdNew = false;
+				return existing;
+			}
+			createdNew = true;
+			return onObject.AddComponent<T>();
+		}
+
+		/// <summary>
+		/// An alternative to <see cref="System.Array.Empty{T}"/> for when the array will be mutated with functions like <see cref="System.Array.Resize{T}(ref T[], int)"/>
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <returns></returns>
+		public static T[] NewEmpty<T>() => new T[0];
 
 	}
 }

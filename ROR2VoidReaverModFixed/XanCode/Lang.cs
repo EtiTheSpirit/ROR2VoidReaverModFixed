@@ -21,6 +21,13 @@ namespace ROR2VoidReaverModFixed.XanCode {
 		public const string SURVIVOR_LORE = $"{UNIQUE_SURVIVOR_PREFIX}_LORE"; // This MUST be prefixed by _LORE
 		public const string SURVIVOR_OUTRO = $"{UNIQUE_SURVIVOR_PREFIX}_OUTRO_FLAVOR";
 
+		public const string DEFAULT_SKIN = $"{UNIQUE_SURVIVOR_PREFIX}_DEFAULT_SKIN";
+		public const string GHOST_SKIN = $"{UNIQUE_SURVIVOR_PREFIX}_GHOST_SKIN";
+
+		public const string PASSIVE_KEYWORD = $"{UNIQUE_SURVIVOR_PREFIX}_PASSIVE_KEYWORD";
+		public const string PASSIVE_NAME = $"{UNIQUE_SURVIVOR_PREFIX}_PASSIVE_NAME";
+		public const string PASSIVE_DESC = $"{UNIQUE_SURVIVOR_PREFIX}_PASSIVE_DESC";
+
 		public const string SKILL_PRIMARY_TRIPLESHOT_NAME = $"{UNIQUE_SURVIVOR_PREFIX}_SKILL_PRIMARY_TRIPLESHOT_NAME";
 		public const string SKILL_PRIMARY_SPREAD_NAME = $"{UNIQUE_SURVIVOR_PREFIX}_SKILL_PRIMARY_SPREAD_NAME";
 		public const string SKILL_SECONDARY_NAME = $"{UNIQUE_SURVIVOR_PREFIX}_SKILL_SECONDARY_NAME";
@@ -52,6 +59,22 @@ namespace ROR2VoidReaverModFixed.XanCode {
 		private static string Round(float value) => Mathf.RoundToInt(value).ToString();
 
 		/// <summary>
+		/// Ronds a floating point value to the nearest tenths place, returning it as a string.
+		/// </summary>
+		/// <param name="value"></param>
+		/// <returns></returns>
+		// also lmao
+		private static string RoundTen(float value) => value == 1 ? "1" : (Mathf.Round(value * 10) / 10).ToString("0.0");
+
+		/// <summary>
+		/// Lazily "pluralize" a word by adding "s" to the end if the input value is not exactly 1.
+		/// </summary>
+		/// <param name="word"></param>
+		/// <param name="value"></param>
+		/// <returns></returns>
+		private static string LazyPluralize(string word, float value) => value == 1 ? word : word + "s";
+
+		/// <summary>
 		/// Converts a set of lines (each as one parameter) into RoR2's standard character details format.
 		/// </summary>
 		/// <param name="lines"></param>
@@ -71,41 +94,68 @@ namespace ROR2VoidReaverModFixed.XanCode {
 
 		public static void Init() {
 
+			#region Name and Lore
 			LanguageAPI.Add(SURVIVOR_NAME, "Void Reaver");
 			LanguageAPI.Add(SURVIVOR_DESC, LinesToSurvivorDetails(
-				"The Void Reaver specializes in low to mid range combat and crowd control, proving to be a versatile support class when things get hectic.",
+				"The Void Reaver specializes in low to mid range combat, and supports classes that specialize in crowd control.",
 				"<style=cIsVoid>Void Impulse</style> is good for high damage against single targets at any range. In contrast, <style=cIsVoid>Void Spread</style> is much better for crowd control and targeting more than one monster at once.",
 				"<style=cIsVoid>Undertow</style> can greatly assist allies in finishing off targets as well as giving you a moment of breathing room to focus on other monsters.",
 				"<style=cIsVoid>Dive</style> is a powerful escape tool. Alongside healing you, it also makes enemies lose track of you, and protects you from incoming damage.",
 				"<style=cIsVoid>Collapse</style> (<style=cIsVoid>Reave</style>'s more aggressive counterpart), which is triggered upon your death (either naturally, or by activating the dedicated ability), will cause the same implosion effect seen on ordinary Void Reavers. Closing the distance between yourself and strong enemies when you are about to die could be extremely useful to your fellow survivors!"
 			));
 			LanguageAPI.Add(SURVIVOR_LORE, THE_LORE);
-			LanguageAPI.Add(SURVIVOR_OUTRO, "..and so it left, its first impression of life familiarly destructive.");
+			LanguageAPI.Add(SURVIVOR_OUTRO, "..and so it left, intrigued at how life was so familiarly destructive");
+			#endregion
 
-			LanguageAPI.Add(SKILL_PRIMARY_TRIPLESHOT_NAME, "<style=cIsVoid>Void Impulse</style>");
+			#region Palettes
+			LanguageAPI.Add(DEFAULT_SKIN, "Default");
+			LanguageAPI.Add(GHOST_SKIN, "Friendly");
+			#endregion
+
+
+			#region Passive
+			string voidBornIntro = "The Void Reaver inherits all of the benefits and drawbacks of its kin.";
+			string desc = $"[ Collapse ]\n<style=cSub>Upon death, <style=cIsVoid>Collapse</style> is triggered, dealing <style=cIsDamage>{Percentage(Configuration.BaseDeathDamage)} damage</style> to all monsters {(Configuration.VoidDeathFriendlyFire ? "<style=cIsDamage>and players</style> " : string.Empty)}caught within.</style>";
+			if (Configuration.VoidImmunity) {
+				desc += "\n\n[ Void Entity ]\n<style=cSub>Grants <style=cIsUtility>immunity</style> to the Void's <style=cIsVoid>passive environmental damage</style> and <style=cIsVoid>fog</style>.</style>";
+			}
+
+			LanguageAPI.Add(PASSIVE_NAME, "<style=cIsVoid>Void Entity</style>");
+			LanguageAPI.Add(PASSIVE_KEYWORD, desc);
+			LanguageAPI.Add(PASSIVE_DESC, voidBornIntro);
+			#endregion
+
+			#region Primary Attack
+			LanguageAPI.Add(SKILL_PRIMARY_TRIPLESHOT_NAME, "Void Impulse");
 			if (Configuration.UseExperimentalSequenceShotBuff) {
 				LanguageAPI.Add(SKILL_PRIMARY_TRIPLESHOT_DESC, $"Fire <style=cUserSetting>{Configuration.BulletsPerImpulseShot}</style> bursts of <style=cIsVoid>void pearls</style> in quick succession that hit twice for <style=cIsDamage>2x{Percentage(Configuration.BasePrimaryDamage / 2)} damage</style>. <style=cIsUtility>Attack speed</style> increases <style=cIsUtility>the number of pearls</style> fired in each burst.");
 			} else {
 				LanguageAPI.Add(SKILL_PRIMARY_TRIPLESHOT_DESC, $"Fire <style=cUserSetting>{Configuration.BulletsPerImpulseShot}</style> <style=cIsVoid>void pearls</style> in quick succession that hit twice for <style=cIsDamage>2x{Percentage(Configuration.BasePrimaryDamage / 2)} damage</style>. <style=cIsUtility>Attack speed</style> increases <style=cIsUtility>the number of pearls</style> that are fired.");
 			}
-			LanguageAPI.Add(SKILL_PRIMARY_SPREAD_NAME, "<style=cIsVoid>Void Spread</style>");
+			LanguageAPI.Add(SKILL_PRIMARY_SPREAD_NAME, "Void Spread");
 			LanguageAPI.Add(SKILL_PRIMARY_SPREAD_DESC, $"Fire <style=cUserSetting>{Configuration.BulletsPerSpreadShot}</style> <style=cIsVoid>void pearls</style> that each hit twice for <style=cIsDamage>2x{Percentage(Configuration.BasePrimaryDamage/2)} damage</style>. The pearls are shot in a <style=cUserSetting>{Round(Configuration.SpreadShotArcLengthDegs)} degree horizontal spread</style>.");
+			#endregion
 
-			LanguageAPI.Add(SKILL_SECONDARY_NAME, "<style=cIsVoid>Undertow</style>");
+			#region Secondary Attack
+			LanguageAPI.Add(SKILL_SECONDARY_NAME, "Undertow");
 			LanguageAPI.Add(SKILL_SECONDARY_DESC, $"Create a cluster of <style=cUserSetting>{Configuration.SecondaryCount}</style> bombs that each deal <style=cIsDamage>{Percentage(Configuration.BaseSecondaryDamage)} damage</style>. Inflicts <style=cIsVoid>Nullify Stack</style>. <style=cIsUtility>Attack speed</style> increases the number of bombs and the placement radius.");
+			#endregion
 
-			LanguageAPI.Add(SKILL_UTILITY_NAME, "<style=cIsVoid>Dive</style>");
-			LanguageAPI.Add(SKILL_UTILITY_DESC, $"Temporarily slip into the void, becoming <style=cIsUtility>intangible</style> and recovering <style=cIsHealing>10% health</style>. Monsters that are currently attacking will lose track of your position.");
+			#region Utility
+			LanguageAPI.Add(SKILL_UTILITY_NAME, "Dive");
+			LanguageAPI.Add(SKILL_UTILITY_DESC, $"Propel yourself through the void at <style=cUserSetting>{Percentage(Configuration.UtilitySpeed)} movement speed</style> for <style=cUserSetting>{RoundTen(Configuration.UtilityDuration)} {LazyPluralize("second", Configuration.UtilityDuration)}</style>, healing <style=cIsHealing>{Percentage(Configuration.UtilityRegen)} maximum health</style>. Gain <style=cIsUtility>Immunity</style> and <style=cIsUtility>Invisibility</style> while away.");
+			#endregion
 
-			LanguageAPI.Add(SKILL_SPECIAL_WEAK_NAME, "<style=cIsVoid>Reave</style>");
-			LanguageAPI.Add(SKILL_SPECIAL_WEAK_DESC, $"Sacrifice <style=cIsHealth>{Percentage(Configuration.ReaveCost)} of your health</style> to create a noticably weaker-than-usual <style=cIsVoid>void collapse</style> that deals <style=cIsDamage>{Percentage(Configuration.BaseSpecialDamage)} damage</style> to all monsters caught within.");
-			LanguageAPI.Add(SKILL_SPECIAL_SUICIDE_NAME, "<style=cIsVoid>Collapse</style>");
+			#region Special
+			LanguageAPI.Add(SKILL_SPECIAL_WEAK_NAME, "Reave");
+			LanguageAPI.Add(SKILL_SPECIAL_WEAK_DESC, $"Sacrifice <style=cIsHealth>{Percentage(Configuration.ReaveCost)} of your health</style> to trigger a weaker form of <style=cIsVoid>Collapse</style>, dealing <style=cIsDamage>{Percentage(Configuration.BaseSpecialDamage)} damage</style> to all monsters {(Configuration.VoidDeathFriendlyFire ? "<style=cIsDamage>and players</style> " : string.Empty)}caught within.");
+			LanguageAPI.Add(SKILL_SPECIAL_SUICIDE_NAME, "Collapse");
 			if (Configuration.IsVoidDeathInstakill) {
-				LanguageAPI.Add(SKILL_SPECIAL_SUICIDE_DESC, $"<style=cDeath>{SKULL} Extinguish your life {SKULL}</style> to trigger a natural <style=cIsVoid>void collapse</style> in all its glory, <style=cIsDamage>instantly killing</style> all monsters caught within.");
+				LanguageAPI.Add(SKILL_SPECIAL_SUICIDE_DESC, $"<style=cDeath>{SKULL} Extinguish your life {SKULL}</style> to trigger <style=cIsVoid>Collapse</style>, <style=cIsDamage>instantly killing</style> all monsters {(Configuration.VoidDeathFriendlyFire ? "<style=cIsDamage>and players</style> " : string.Empty)}caught within.");
 			} else {
-				LanguageAPI.Add(SKILL_SPECIAL_SUICIDE_DESC, $"<style=cDeath>{SKULL} Extinguish your life {SKULL}</style> to trigger a natural <style=cIsVoid>void collapse</style> in all its glory, dealing an incredible <style=cIsDamage>{Percentage(Configuration.BaseDeathDamage)} damage</style> to all monsters caught within.");
+				LanguageAPI.Add(SKILL_SPECIAL_SUICIDE_DESC, $"<style=cDeath>{SKULL} Extinguish your life {SKULL}</style> to trigger <style=cIsVoid>Collapse</style>, dealing <style=cIsDamage>{Percentage(Configuration.BaseDeathDamage)} damage</style> to all monsters {(Configuration.VoidDeathFriendlyFire ? "<style=cIsDamage>and players</style> " : string.Empty)}caught within.");
 			}
-
+			#endregion
 		}
 
 		private const string THE_LORE = @"<style=cMono>//--AUTO-TRANSCRIPTION FROM CAMPSITE 1214B [SOME INFORMATION REDACTED]--//</style>

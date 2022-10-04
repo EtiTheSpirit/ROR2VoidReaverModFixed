@@ -1,8 +1,7 @@
-﻿// #define USE_CUSTOM_MINMAX
-
-using BepInEx.Configuration;
+﻿using BepInEx.Configuration;
 using FubukiMods.Modules;
 using ROR2VoidReaverModFixed.XanCode.ConfigurationUtil;
+using ROR2VoidReaverModFixed.XanCode.Data;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -18,9 +17,11 @@ namespace ROR2VoidReaverModFixed.XanCode {
 
 		private static ConfigFile _cfg = null;
 
-		#region Entries
+		#region Configuration Entries
 
 		#region Public Properties
+
+		#region Base Stats
 
 		public static float BaseMaxHealth => _baseMaxHealth.Value;
 		public static float LevelMaxHealth => _levelMaxHealth.Value;
@@ -36,33 +37,6 @@ namespace ROR2VoidReaverModFixed.XanCode {
 
 		public static float BaseDamage => _baseDamage.Value;
 		public static float LevelDamage => _levelDamage.Value;
-
-		public static float BasePrimaryDamage => _basePrimaryDamage.Value;
-		//public static float LevelPrimaryDamage => _levelPrimaryDamage.Value;
-		public static Vector2 PrimaryImpulseSpread => _primaryImpulseSpread.Value;
-		public static Vector2 PrimarySpreadShotSpread => _primarySpreadShotSpread.Value;
-		public static float PrimaryImpulseShotTime => _primaryImpulseShotTime.Value;
-		public static int BulletsPerImpulseShot => _primaryImpulseBulletCount.Value;
-		public static int BulletsPerSpreadShot => _primarySpreadBulletCount.Value;
-		public static float SpreadShotArcLengthDegs => _primarySpreadArcDegrees.Value;
-
-		public static float BaseSecondaryDamage => _baseSecondaryDamage.Value;
-		public static float SecondarySpread => _secondaryRadius.Value;
-		public static int SecondaryCount => _secondaryCount.Value;
-		//public static float LevelSecondaryDamage => _levelSecondaryDamage.Value;
-		public static float SecondaryCooldown => _secondaryCooldown.Value;
-
-		public static float BaseSpecialDamage => _baseSpecialDamage.Value;
-		//public static float LevelSpecialDamage => _levelSpecialDamage.Value;
-		public static float SpecialCooldown => _specialCooldown.Value;
-
-		public static float BaseDeathDamage => _baseDeathDamage.Value;
-
-		/// <summary>
-		/// Not a configurable setting. This is identical to <c><see cref="BaseDeathDamage"/> &gt;= <see cref="Skills.VoidDeath.VOID_DELETION_THRESHOLD"/></c>
-		/// </summary>
-		public static bool IsVoidDeathInstakill => BaseDeathDamage >= Skills.VoidDeath.VOID_DELETION_THRESHOLD;
-		//public static float LevelDeathDamage => _levelDeathDamage.Value;
 
 		public static float BaseCritChance => _baseCritChance.Value;
 		public static float LevelCritChance => _levelCritChance.Value;
@@ -80,17 +54,164 @@ namespace ROR2VoidReaverModFixed.XanCode {
 		public static float BaseAttackSpeed => _baseAttackSpeed.Value;
 		public static float LevelAttackSpeed => _levelAttackSpeed.Value;
 
-		public static float ReaveCost => _reaveHealthCostPercent.Value;
-		public static bool ReaveImmunity => _reaveImmunity.Value;
-		public static bool UseLegacyLunarMechanics => false;//_useLegacyLunarBase.Value;
+		#endregion
 
+		#region Primary Attack
+		/// <summary>
+		/// The common base damage of Void Impulse and Void Spread
+		/// </summary>
+		public static float BasePrimaryDamage => _basePrimaryDamage.Value;
+
+		/// <summary>
+		/// If true, Void Impulse will prefer to bulk bullets into bursts. The amount of bursts tries to be equal to <see cref="BulletsPerImpulseShot"/>.
+		/// </summary>
 		public static bool UseExperimentalSequenceShotBuff => _primaryUseExperimentalTripleshotBuff.Value;
 
-		public static bool UseFullSizeCharacter => _useFullSizeCharacter.Value;
+		#region Void Impulse
+		/// <summary>
+		/// The min and max spread of Void Impulse projectiles.
+		/// </summary>
+		public static Vector2 PrimaryImpulseSpread => _primaryImpulseSpread.Value;
+
+		/// <summary>
+		/// The amount of time that Void Impulse tries to fire all projectiles in.
+		/// </summary>
+		public static float PrimaryImpulseShotTime => _primaryImpulseShotTime.Value;
+
+		/// <summary>
+		/// The amount of bursts fired when Void Impulse is used.
+		/// </summary>
+		public static int BulletsPerImpulseShot => _primaryImpulseBulletCount.Value;
+		#endregion
+
+		#region Void Spread
+		/// <summary>
+		/// The amount of bullets that will be in the fan of shots
+		/// </summary>
+		public static int BulletsPerSpreadShot => _primarySpreadBulletCount.Value;
+
+		/// <summary>
+		/// The min and max deviation for each projectile in the spread shot.
+		/// </summary>
+		public static Vector2 PrimarySpreadShotSpread => _primarySpreadShotSpread.Value;
+
+		/// <summary>
+		/// The width of the arc that shots are evenly distributed within.
+		/// </summary>
+		public static float SpreadShotArcLengthDegs => _primarySpreadArcDegrees.Value;
+		#endregion
 
 		#endregion
 
-		#region Backing Settings
+		#region Secondary Attack
+		/// <summary>
+		/// The base damage that Undertow does.
+		/// </summary>
+		public static float BaseSecondaryDamage => _baseSecondaryDamage.Value;
+
+		/// <summary>
+		/// The default radius of Undertow.
+		/// </summary>
+		public static float SecondarySpread => _secondaryRadius.Value;
+
+		/// <summary>
+		/// The amount of black holes that Undertow places.
+		/// </summary>
+		public static int SecondaryCount => _secondaryCount.Value;
+
+		/// <summary>
+		/// The cooldown of Undertow.
+		/// </summary>
+		public static float SecondaryCooldown => _secondaryCooldown.Value;
+
+		#endregion
+
+		#region Utility
+		/// <summary>
+		/// The speed at which the player travels whilst using Dive
+		/// </summary>
+		public static float UtilitySpeed => _utilitySpeed.Value;
+
+		/// <summary>
+		/// The amount of health the player regenerates when using Dive
+		/// </summary>
+		public static float UtilityRegen => _utilityRegen.Value;
+
+		/// <summary>
+		/// The amount of time the player travels for in Dive
+		/// </summary>
+		public static float UtilityDuration => _utilityDuration.Value;
+		#endregion
+
+		#region Special
+
+		/// <summary>
+		/// The base amount of damage that Reave does. This does not affect Collapse.
+		/// </summary>
+		public static float BaseSpecialDamage => _baseSpecialDamage.Value;
+
+		#region Reave
+
+		/// <summary>
+		/// The cooldown of Reave in seconds.
+		/// </summary>
+		public static float SpecialCooldown => _reaveCooldown.Value;
+
+		/// <summary>
+		/// The amount of health the player must spend to perform Reave.
+		/// </summary>
+		public static float ReaveCost => _reaveHealthCostPercent.Value;
+
+		/// <summary>
+		/// If true, the player cannot take damage whilst performing their Reave special.
+		/// </summary>
+		public static bool ReaveImmunity => _reaveImmunity.Value;
+		#endregion
+
+		#region Collapse
+		/// <summary>
+		/// The amount of damage that the implosion on death does.
+		/// </summary>
+		public static float BaseDeathDamage => _baseDeathDamage.Value;
+		/// <summary>
+		/// Not a configurable setting. This is identical to <c><see cref="BaseDeathDamage"/> &gt;= <see cref="XanConstants.VoidDeletionThreshold"/></c>
+		/// </summary>
+		public static bool IsVoidDeathInstakill => BaseDeathDamage >= XanConstants.VoidDeletionThreshold;
+
+		/// <summary>
+		/// Whether or not Reave/Collapse deals damage to friendly players.
+		/// </summary>
+		public static bool VoidDeathFriendlyFire => _collapseFriendlyFire.Value;
+		#endregion
+		#endregion
+
+		#region Misc.
+		/// <summary>
+		/// [Not Implemented] Whether to use the old abilities that were effectively duplicates of Lunar abilities.
+		/// </summary>
+		[Obsolete("This has not been implemented, and might be completely removed.")]
+		public static bool UseLegacyLunarMechanics => false;//_useLegacyLunarBase.Value;
+
+		/// <summary>
+		/// [Experimental] Allow the scale of the player character to be identical to that of a real reaver.
+		/// </summary>
+		public static bool UseFullSizeCharacter => _useFullSizeCharacter.Value;
+
+		/// <summary>
+		/// Use icons I rendered in Blender instead of the pixel art that LuaFubuki made.
+		/// </summary>
+		public static bool UseNewIcons => _useNewIcons.Value;
+
+		/// <summary>
+		/// If true, the character should be immune to the effects of Void Fog, and the passive damage from void atmospheres (such as the interior of Void Seeds, the ambient atmosphere of the Void Fields and Locus, etc.)
+		/// </summary>
+		public static bool VoidImmunity => _voidImmunity.Value;
+		#endregion
+
+		#endregion
+
+		#region Backing Settings Objects
+		#region Base Stats
 		private static ConfigEntry<float> _baseMaxHealth;
 		private static ConfigEntry<float> _levelMaxHealth;
 
@@ -105,26 +226,6 @@ namespace ROR2VoidReaverModFixed.XanCode {
 
 		private static ConfigEntry<float> _baseDamage;
 		private static ConfigEntry<float> _levelDamage;
-
-		private static ConfigEntry<float> _basePrimaryDamage;
-		//private static ConfigEntry<float> _levelPrimaryDamage;
-		private static ConfigEntry<Vector2> _primaryImpulseSpread;
-		private static ConfigEntry<Vector2> _primarySpreadShotSpread;
-		private static ConfigEntry<float> _primaryImpulseShotTime;
-
-
-		private static ConfigEntry<float> _baseSecondaryDamage;
-		private static ConfigEntry<float> _secondaryRadius;
-		private static ConfigEntry<int> _secondaryCount;
-		//private static ConfigEntry<float> _levelSecondaryDamage;
-		private static ConfigEntry<float> _secondaryCooldown;
-
-		private static ConfigEntry<float> _baseSpecialDamage;
-		//private static ConfigEntry<float> _levelSpecialDamage;
-		private static ConfigEntry<float> _specialCooldown;
-
-		private static ConfigEntry<float> _baseDeathDamage;
-		//private static ConfigEntry<float> _levelDeathDamage;
 
 		private static ConfigEntry<float> _baseCritChance;
 		private static ConfigEntry<float> _levelCritChance;
@@ -142,35 +243,96 @@ namespace ROR2VoidReaverModFixed.XanCode {
 		private static ConfigEntry<float> _baseAttackSpeed;
 		private static ConfigEntry<float> _levelAttackSpeed;
 
-		private static ConfigEntry<float> _reaveHealthCostPercent;
-		private static ConfigEntry<bool> _reaveImmunity;
-		//private static ConfigEntry<bool> _reaveCostIsAbsolute;
+
+		#endregion
+
+		#region Primary Attack
+		private static ConfigEntry<float> _basePrimaryDamage;
+		//private static ConfigEntry<float> _levelPrimaryDamage;
+		private static ConfigEntry<Vector2> _primaryImpulseSpread;
+		private static ConfigEntry<Vector2> _primarySpreadShotSpread;
+		private static ConfigEntry<float> _primaryImpulseShotTime;
 		private static ConfigEntry<int> _primaryImpulseBulletCount;
 		private static ConfigEntry<int> _primarySpreadBulletCount;
 		private static ConfigEntry<float> _primarySpreadArcDegrees;
-		private static ConfigEntry<bool> _useLegacyLunarBase;
 		private static ConfigEntry<bool> _primaryUseExperimentalTripleshotBuff;
+		#endregion
+
+		#region Secondary Attack
+		private static ConfigEntry<float> _baseSecondaryDamage;
+		private static ConfigEntry<float> _secondaryRadius;
+		private static ConfigEntry<int> _secondaryCount;
+		//private static ConfigEntry<float> _levelSecondaryDamage;
+		private static ConfigEntry<float> _secondaryCooldown;
+		#endregion
+
+		#region Utility
+		private static ConfigEntry<float> _utilitySpeed;
+		private static ConfigEntry<float> _utilityRegen;
+		private static ConfigEntry<float> _utilityDuration;
+		#endregion
+
+		#region Special
+		private static ConfigEntry<float> _baseSpecialDamage;
+
+		#region Reave
+		private static ConfigEntry<float> _reaveCooldown;
+		private static ConfigEntry<float> _reaveHealthCostPercent;
+		private static ConfigEntry<bool> _reaveImmunity;
+		#endregion
+
+		#region Collapse
+		private static ConfigEntry<float> _baseDeathDamage;
+		private static ConfigEntry<bool> _collapseFriendlyFire;
+		#endregion
+		#endregion
+
+		#region Misc.
+		private static ConfigEntry<bool> _useLegacyLunarBase;
 		private static ConfigEntry<bool> _useFullSizeCharacter;
+		private static ConfigEntry<bool> _useNewIcons;
+		private static ConfigEntry<bool> _voidImmunity;
+		#endregion
 		#endregion
 
 		#endregion
 
-		// lmao
+		#region Backing Code
+
+		/// <summary>
+		/// Whether or not the custom config limits are in place.
+		/// </summary>
+		private static readonly bool USE_CUSTOM_MINMAX = false;
+
+		/// <summary>
+		/// Casts <see cref="ConfigEntryBase.DefaultValue"/> into the type represented by a <see cref="ConfigEntry{T}"/>.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="cfg"></param>
+		/// <returns></returns>
 		private static T DefVal<T>(this ConfigEntry<T> cfg) where T : struct => (T)cfg.DefaultValue;
 
 		private const string FMT_DEFAULT = "The base {0} that the character has on a new run.";
 		private const string FMT_LEVELED = "For each level the player earns, the base {0} increases by this amount.";
 
+		/// <summary>
+		/// An alias to declare a <see cref="ConfigDefinition"/> based on what limit types to include.<para/>
+		/// This is a lazy "solution" to custom limits not working very well.
+		/// </summary>
+		/// <param name="desc">The description of the setting.</param>
+		/// <param name="limit">The limit for the setting, which may or may not actually be used.</param>
+		/// <returns></returns>
 		public static ConfigDescription StaticDeclareConfigDescription(string desc, AcceptableValueBase limit = null) {
-#if USE_CUSTOM_MINMAX
-			return new ConfigDescription(desc, limit);
-#else
-			if (limit is not AcceptableMinimum && limit is not AcceptableUserDefinedMinMax) {
+			if (USE_CUSTOM_MINMAX) {
 				return new ConfigDescription(desc, limit);
 			} else {
-				return new ConfigDescription(desc);
+				if (limit is not AcceptableMinimum && limit is not AcceptableUserDefinedMinMax) {
+					// My type is broken so only allow it if it's not mine.
+					return new ConfigDescription(desc, limit);
+				} else {
+					return new ConfigDescription(desc);
+				}
 			}
-#endif
 		}
 
 		public static void Init(ConfigFile cfg) {
@@ -198,25 +360,25 @@ namespace ROR2VoidReaverModFixed.XanCode {
 			_basePrimaryDamage = cfg.Bind("3a. Character Primary", "Base Primary Damage", 1f, StaticDeclareConfigDescription(string.Format(FMT_DEFAULT, "primary attack damage output") + " Since damage is dealt in two ticks, each tick doing half damage, this value is the total of both ticks combined.", new AcceptableMinimum<float>()));
 			_primaryImpulseBulletCount = cfg.Bind("3a. Character Primary", "Bullets Per Impulse Shot", 3, StaticDeclareConfigDescription("When using Void Impulse as your primary, this is the amount of bullets fired per shot by default.", new AcceptableMinimum<int>(1)));
 			_primaryImpulseSpread = cfg.Bind("3a. Character Primary", "Impulse Spread Factor", new Vector2(0, 1), StaticDeclareConfigDescription("The X component is the minimum spread, and the Y component is the maximum spread, of bullets shot with Void Impulse. Both are measured in degrees.", new AcceptableUserDefinedMinMax()));
-			_primarySpreadArcDegrees = cfg.Bind("3a. Character Primary", "Void Spread Total Arc Length", 40f, "When using Void Spread as your primary, this value, measured in degrees, represents the angle between each of the five bullets in the spread. This angle is divided upon them evenly.");
+			_primarySpreadArcDegrees = cfg.Bind("3a. Character Primary", "Void Spread Total Arc Length", 20f, StaticDeclareConfigDescription("When using Void Spread as your primary, this value, measured in degrees, represents the angle between each of the five bullets in the spread. This angle is divided upon them evenly.", new AcceptableValueRange<float>(0, 360f)));
 			_primarySpreadBulletCount = cfg.Bind("3a. Character Primary", "Void Spread Bullets Per Shot", 5, StaticDeclareConfigDescription("Void Spread will fire this many projectiles in a horizontal fan. NOTE: It's a good idea for this value to be an odd number, so at least one bullet goes directly towards the crosshair.", new AcceptableMinimum<int>(1)));
 			_primarySpreadShotSpread = cfg.Bind("3a. Character Primary", "Void Spread Spread Factor", new Vector2(0, 0.2f), StaticDeclareConfigDescription("The X component is the minimum spread, and the Y component is the maximum spread, of bullets shot with Void Spread. Both are measured in degrees.", new AcceptableUserDefinedMinMax()));
 			_primaryImpulseShotTime = cfg.Bind("3a. Character Primary", "Impulse Shot Time", 0.3f, StaticDeclareConfigDescription("Void Impulse will try to fire all of its bullets in this amount of time.", new AcceptableValueRange<float>(0, 1)));
 			_primaryUseExperimentalTripleshotBuff = cfg.Bind("3a. Character Primary", "Void Impulse Bulking", true, "Previously, Void Impulse would increase the number of bullets fired in a constant timespan (Impulse Shot Time) as attack speed increased. If this is enabled, this behavior is altered so that it prefers shooting the defined burst count (Bullets Per Impulse Shot), adding more bullets to each individual shot so that it's more like a sequence of shotgun bursts.");
-			//_levelPrimaryDamage = cfg.Bind("3a. Character Primary", "Leveled Primary Damage", 2f, string.Format(FMT_LEVELED, "primary attack damage output") + " Since damage is dealt in two ticks, each tick doing half damage, this value is the total of both ticks combined.");
 
 			_baseSecondaryDamage = cfg.Bind("3b. Character Secondary", "Void Bomb Damage", 3f, StaticDeclareConfigDescription("The character's Base Damage (see section 4) is multiplied by this value to determine the damage of an individual Void Bomb.", new AcceptableMinimum<float>()));
 			_secondaryRadius = cfg.Bind("3b. Character Secondary", "Void Bomb Radius", 12f, StaticDeclareConfigDescription("The radius of the area that Void Bombs can spawn in.", new AcceptableMinimum<float>(1f)));
 			_secondaryCount = cfg.Bind("3b. Character Secondary", "Void Bomb Count", 6, StaticDeclareConfigDescription("The amount of Void Bombs spawned when using the secondary ability.", new AcceptableMinimum<int>(1)));
-			//_levelSecondaryDamage = cfg.Bind("3b. Character Secondary", "Leveled Secondary Damage", 0.125f, string.Format(FMT_LEVELED, "secondary attack damage output"));
-			_secondaryCooldown = cfg.Bind("3b. Character Secondary", "Secondary Cooldown", 5f, StaticDeclareConfigDescription("The amount of time, in seconds, that the player must wait before one stock of their secondary recharges.", new AcceptableMinimum<float>()));
-			
-			_baseSpecialDamage = cfg.Bind("3c. Character Special", "Base Special Damage", 60f, StaticDeclareConfigDescription(string.Format(FMT_DEFAULT, "special attack damage output") + " Note that this does not apply to the death effect. As such, this strictly affects the \"Reave\" ability.", new AcceptableMinimum<float>()));
-			//_levelSpecialDamage = cfg.Bind("3c. Character Special", "Leveled Special Damage", 1.5f, string.Format(FMT_LEVELED, "special attack damage output") + " Note that this does not apply to the death effect. As such, this strictly affects the \"Reave\" ability.");
-			_specialCooldown = cfg.Bind("3c. Character Special", "Special Cooldown", 30f, StaticDeclareConfigDescription("The amount of time, in seconds, that the player must wait before one stock of their special recharges.", new AcceptableMinimum<float>()));
+			_secondaryCooldown = cfg.Bind("3b. Character Secondary", "Void Bomb Cooldown", 5f, StaticDeclareConfigDescription("The amount of time, in seconds, that the player must wait before one stock of their secondary recharges.", new AcceptableMinimum<float>()));
+
+			_utilitySpeed = cfg.Bind("3c. Character Utility", "Dive Speed Multiplier", 4f, StaticDeclareConfigDescription("The speed at which Dive moves you, as a multiplied factor of your current movement speed.", new AcceptableMinimum<float>()));
+			_utilityRegen = cfg.Bind("3c. Character Utility", "Dive Regeneration", 0.10f, StaticDeclareConfigDescription("The percentage of health you regenerate when using Dive.", new AcceptableValueRange<float>(0, 1)));
+			_utilityDuration = cfg.Bind("3c. Character Utility", "Dive Duration", 1f, StaticDeclareConfigDescription("The amount of time, in seconds, that Dive hides the player for.", new AcceptableMinimum<float>()));
+
+			_baseSpecialDamage = cfg.Bind("3d. Character Special", "Base Special Damage", 60f, StaticDeclareConfigDescription(string.Format(FMT_DEFAULT, "special attack damage output") + " Note that this does not apply to the death effect. As such, this strictly affects the \"Reave\" ability.", new AcceptableMinimum<float>()));
+			_reaveCooldown = cfg.Bind("3d. Character Special", "Special Cooldown", 30f, StaticDeclareConfigDescription("The amount of time, in seconds, that the player must wait before one stock of their special recharges.", new AcceptableMinimum<float>()));
 			
 			_baseDeathDamage = cfg.Bind("3d. Character Death", "Base Death Damage", 750f, StaticDeclareConfigDescription(string.Format(FMT_DEFAULT, "death collapse damage output") + " NOTE: If you wish to cause an instant kill like normal Reavers, input any value greater than or equal to one million (thats six zeros c:).", new AcceptableMinimum<float>()));
-			//_levelDeathDamage = cfg.Bind("3d. Character Death", "Leveled Death Damage", 5000f, string.Format(FMT_LEVELED, "death collapse damage output"));
 
 			_baseDamage = cfg.Bind("4. Character Combat", "Base Damage", 16f, StaticDeclareConfigDescription(string.Format(FMT_DEFAULT, "base damage output") + " Other damage values are multiplied with this.", new AcceptableMinimum<float>()));
 			_levelDamage = cfg.Bind("4. Character Combat", "Leveled Damage", 2.4f, StaticDeclareConfigDescription(string.Format(FMT_LEVELED, "base damage output") + " Other damage values are multiplied with this.", new AcceptableMinimum<float>()));
@@ -228,8 +390,13 @@ namespace ROR2VoidReaverModFixed.XanCode {
 			_reaveImmunity = cfg.Bind("5. Void Reaver Specifics", "Reave Protection", true, "While performing the \"Reave\" special, and if this is true, you will not be able to take damage while locked in the animation.");
 			_reaveHealthCostPercent = cfg.Bind("5. Void Reaver Specifics", "Reave Cost", 0.5f, StaticDeclareConfigDescription("This is the health cost required to perform the \"Reave\" special. The actual manner in which this is used is determined by another setting in this category.", new AcceptableValueRange<float>(0f, 0.99f)));
 			// _useLegacyLunarBase = cfg.Bind("5. Void Reaver Specifics", "Use Legacy Lunar Mechanics", false, "If enabled, legacy abilities from when Lunar mechanics were used for the Primary and Utility slots will be implemented instead of their modern replacements.");
-			_useFullSizeCharacter = cfg.Bind("5. Void Reaver Specifics", "(EXPERIMENTAL) Use Full Size Reaver", false, "By default, the mod sets the Reaver's scale to 75% that of its natural size. Turning this on will make you the same size as a normal Reaver, which may not look very good when you try to get through some parts of the world.");
+			_useFullSizeCharacter = cfg.Bind("5. Void Reaver Specifics", "(EXPERIMENTAL) Use Full Size Reaver", false, "By default, the mod sets the Reaver's scale to 50% that of its natural size. Turning this on will make you the same size as a normal Reaver. **EXPERIMENTAL WARNING** This setting has not been tested very much and there will be problems with world collisions (you might not be able to traverse the whole world), attacks and interactions, and more. This setting mostly exists for giggles.");
+			_collapseFriendlyFire = cfg.Bind("5. Void Reaver Specifics", "(EXPERIMENTAL) Collapse Harms Players", false, "If enabled, any form of a void collapse (Reave, Collapse/Death) can deal damage to and/or kill friendly players. This mimics the behavior of the Newly Hatched Zoea, where friendly void enemies will still kill players caught in their death implosion. **EXPERIMENTAL WARNING** This may be inconsistent when using Reave.");
+			_voidImmunity = cfg.Bind("5. Void Reaver Specifics", "Void Immunity", true, "If enabled, the player will be immune to damage from a void atmosphere and will not have the fog effect applied to them. **EXPERIMENTAL WARNING** There isn't actually a way to tell if you are taking damage from the void. The way I do it is an educated guess. This means you may actually resist completely valid damage types from some enemies, but I have yet to properly test this.");
 
+			_useNewIcons = cfg.Bind("6. Other Options", "Use New Icons", true, "If true, this abandons the old pixel art icons created by LuaFubuki, and replaces them with renders that I made.");
 		}
+
+		#endregion
 	}
 }
