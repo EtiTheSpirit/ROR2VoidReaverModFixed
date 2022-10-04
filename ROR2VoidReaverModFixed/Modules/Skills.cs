@@ -57,21 +57,18 @@ namespace FubukiMods.Modules {
 		/// <param name="muzzleTransform"></param>
 		/// <param name="damageMultiplier"></param>
 		/// <param name="canCrit"></param>
-		/// <param name="instakill"></param>
+		/// <param name="isDeath"></param>
 		/// <returns></returns>
-		public static FireProjectileInfo GetVoidExplosionFireInfo(BaseState state, GameObject projectile, Transform muzzleTransform, float damageMultiplier, bool canCrit = true, bool instakill = false) {
+		public static FireProjectileInfo GetVoidExplosionFireInfo(BaseState state, GameObject projectile, Transform muzzleTransform, float damageMultiplier, bool isDeath = false) {
 			FireProjectileInfo deletionProjectile = default;
 			deletionProjectile.projectilePrefab = projectile;
 			deletionProjectile.position = muzzleTransform.position;
 			deletionProjectile.rotation = Quaternion.identity;
-			deletionProjectile.owner = state.gameObject;
+			deletionProjectile.owner = Configuration.VoidDeathFriendlyFire ? null : state.gameObject;
 			deletionProjectile.damage = state.damageStat * damageMultiplier;
-			deletionProjectile.crit = canCrit && state.characterBody.RollCrit();
 
-			if (instakill) {
-				deletionProjectile.damageTypeOverride = DamageType.VoidDeath;
-				deletionProjectile.damage = 1000000000;
-				deletionProjectile.damageColorIndex = DamageColorIndex.Void;
+			if (isDeath && Configuration.IsVoidDeathInstakill) {
+				deletionProjectile.damage = float.MaxValue;
 			}
 
 			return deletionProjectile;
@@ -375,9 +372,6 @@ namespace FubukiMods.Modules {
 
 			private const float EFFECT_DURATION = 1f;
 
-			// TODO: Make this configurable?
-			private const float SPEED_BOOST = 4f;
-
 			private float _currentTime;
 
 			private Vector3 _moveVector = Vector3.zero;
@@ -416,7 +410,7 @@ namespace FubukiMods.Modules {
 				}
 				if (NetworkServer.active) {
 					characterBody.AddTimedBuff(RoR2Content.Buffs.Cloak, EFFECT_DURATION);
-					characterBody.AddTimedBuff(RoR2Content.Buffs.CrocoRegen, 0.75f);
+					characterBody.healthComponent.HealFraction(Configuration.UtilityRegen, default);
 				}
 				_moveVector = ((inputBank.moveVector == Vector3.zero) ? characterDirection.forward : inputBank.moveVector).normalized;
 				_yVelocity = characterMotor.velocity.y;
@@ -427,7 +421,7 @@ namespace FubukiMods.Modules {
 				_currentTime += Time.fixedDeltaTime;
 				if (characterMotor != null && characterDirection != null) {
 					characterMotor.velocity = Vector3.zero;
-					characterMotor.rootMotion += _moveVector * (moveSpeedStat * SPEED_BOOST * Time.fixedDeltaTime) * Mathf.Sin(_currentTime / EFFECT_DURATION * 2.3561945f); // 135deg
+					characterMotor.rootMotion += _moveVector * (moveSpeedStat * Configuration.UtilitySpeed * Time.fixedDeltaTime) * Mathf.Sin(_currentTime / EFFECT_DURATION * 2.3561945f); // 135deg
 					characterMotor.rootMotion += new Vector3(0f, _yVelocity * Time.fixedDeltaTime * Mathf.Cos(_currentTime / EFFECT_DURATION * 1.57079637f), 0f);
 				}
 				bool timeToExit = _currentTime >= EFFECT_DURATION && isAuthority;
@@ -478,16 +472,6 @@ namespace FubukiMods.Modules {
 			private bool _hasCreatedVoidPortalEffect = false;
 
 			/// <summary>
-			/// The amount of damage that will be done to the local player.
-			/// </summary>
-			private float _selfDamage;
-
-			/// <summary>
-			/// The amount of ticks to do the damage in.
-			/// </summary>
-			private int _ticks;
-
-			/// <summary>
 			/// This controls the zoom effect when looking at the black hole.
 			/// </summary>
 			private CameraTargetParams.CameraParamsOverrideRequest _zoomOutParams;
@@ -499,18 +483,16 @@ namespace FubukiMods.Modules {
 
 			public override void OnEnter() {
 				base.OnEnter();
-				_selfDamage = healthComponent.combinedHealth * Configuration.ReaveCost;
-				_ticks = 0;
 				_zoomOutParams = default;
 				_zoomOutParams.cameraParamsData.idealLocalCameraPos = new Vector3(0f, 1f, -30f);
 				_zoomOutParams.cameraParamsData.pivotVerticalOffset = 0f;
 				_zoomOutHandle = GetComponent<CameraTargetParams>().AddParamsOverride(_zoomOutParams, 2f);
 				Transform muzzleTransform = FindModelChild(DeathState.muzzleName);
 				PlayCrossfade("Body", "Death", "Death.playbackRate", VoidDeath.REAVE_DURATION, 0.1f);
-				if (isAuthority) {
-					if (muzzleTransform != null && isAuthority) {
-						ProjectileManager.instance.FireProjectile(GetVoidExplosionFireInfo(this, Projectile, muzzleTransform, Configuration.BaseSpecialDamage, true));
-					}
+				if (isAuthority && muzzleTransform != null) {
+					ProjectileManager.instance.FireProjectile(GetVoidExplosionFireInfo(this, Projectile, muzzleTransform, Configuration.BaseSpecialDamage, false));
+				} else if (muzzleTransform != null) {
+					Log.LogError("WARNING: Failed to execute Reave ability! The character does not have a muzzle transform. Were you deleted or something? You good? Did the furries read \"muzzle\" and steal it for their diabolical activities (if so then lmao also L)?");
 				}
 				if (Configuration.ReaveImmunity) {
 					HurtBoxGroup component = GetModelTransform().GetComponent<HurtBoxGroup>();
@@ -519,24 +501,24 @@ namespace FubukiMods.Modules {
 			}
 
 			public override void FixedUpdate() {
-				bool doSelfDamage = NetworkServer.active && fixedAge >= VoidDeath.REAVE_DURATION * 0.2f * _ticks;
-				if (doSelfDamage) {
-					DamageInfo damageInfo = new DamageInfo {
-						attacker = gameObject,
-						crit = false,
-						damage = _selfDamage / 3f,
-						damageType = DamageType.NonLethal | DamageType.BypassArmor | DamageType.BypassBlock,
-						inflictor = gameObject,
-						position = transform.position,
-						procCoefficient = 0f
-					};
-					healthComponent.TakeDamage(damageInfo);
-					_ticks++;
-				}
 				bool isEndOfEffect = fixedAge >= VoidDeath.REAVE_DURATION;
 				if (isEndOfEffect) {
 					if (!_hasCreatedVoidPortalEffect) {
 						_hasCreatedVoidPortalEffect = true;
+						float selfDamage = healthComponent.combinedHealth * Configuration.ReaveCost;
+						if (NetworkServer.active && selfDamage > 0) {
+							DamageInfo dmg = new DamageInfo {
+								//attacker = gameObject,
+								attacker = null,
+								crit = false,
+								damage = selfDamage,
+								damageType = DamageType.NonLethal | DamageType.BypassArmor | DamageType.BypassBlock | DamageType.Silent,
+								inflictor = gameObject,
+								position = transform.position,
+								procCoefficient = 0f
+							};
+							healthComponent.TakeDamage(dmg);
+						}
 						base.PlayAnimation("Gesture, Additive", "Empty");
 						base.PlayAnimation("Gesture, Override", "Empty");
 						outer.SetNextStateToMain();
@@ -590,48 +572,39 @@ namespace FubukiMods.Modules {
 		public class VoidDeath : GenericCharacterDeath {
 
 			/// <summary>
-			/// The settings indicate to the user that setting the damage boost to a value greater than or equal to this number will
-			/// override the void death effect to work just like normal void enemies, instakilling anything in range.
-			/// </summary>
-			public const float VOID_DELETION_THRESHOLD = 1000000f;
-
-			/// <summary>
 			/// The duration that the effect lasts for. This is something the game itself defines.
 			/// </summary>
 			public const float REAVE_DURATION = 2.5f;
 
 			public override void OnEnter() {
-				base.OnEnter();
 				PlayCrossfade("Body", "Death", "Death.playbackRate", REAVE_DURATION, 0.1f);
-
 				if (isAuthority) {
-					// Fall back to the game object's transform on death. I don't think the muzzle goes away but /shrug
-					Transform muzzleTransform = FindModelChild(DeathState.muzzleName).Or(gameObject.transform);
+					Transform muzzleTransform = FindModelChild(DeathState.muzzleName);
 					if (muzzleTransform != null) {
 						ProjectileManager.instance.FireProjectile(GetVoidExplosionFireInfo(
 							this,
 							MainPlugin.ReaveProjectile,
 							muzzleTransform,
 							Configuration.BaseDeathDamage,
-							false,
-							false
+							true
 						));
 					} else {
-						Log.LogError("Missing any transform to fire the Reave projectile from!");
+						Log.LogError("WARNING: Failed to execute death explosion! The character does not have a muzzle transform. Were you deleted or something? You good? Did the furries read \"muzzle\" and steal it for their diabolical activities (if so then lmao also L)?");
 					}
 					EffectManager.SpawnEffect(voidDeathEffect, new EffectData {
 						origin = characterBody.corePosition,
-						scale = 4f // TODO: I believe this needs to be changed in the real scale option.
+						scale = characterBody.bestFitRadius
 					}, true);
 				}
 
-				if (cachedModelTransform) {
-					// This is what the VoidDeath type does, I just have this delayed.
-					Object.Destroy(cachedModelTransform.gameObject, 2.5f);
-					cachedModelTransform = null;
+				// Schedule the character model for deletion after 2.5s
+				if (modelLocator.modelTransform.gameObject) {
+					Object.Destroy(modelLocator.modelTransform.gameObject, REAVE_DURATION);
 				}
 			}
 		}
+
+		#region Lunar Alternates
 
 		/// <summary>
 		/// Not yet implemented. This is the legacy version of the primary attack that used Lunar effects.
@@ -686,5 +659,7 @@ namespace FubukiMods.Modules {
 		/// Not yet implemented. This is a duplicate of the pre-existing lunar utility replacement that I don't remember the name of.
 		/// </summary>
 		public class VoidLunarUtility : GhostUtilitySkillState { }
+
+		#endregion
 	}
 }

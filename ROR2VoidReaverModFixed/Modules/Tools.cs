@@ -6,6 +6,10 @@ using RoR2;
 using RoR2.Skills;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using ROR2VoidReaverModFixed.XanCode;
+using ROR2VoidReaverModFixed.XanCode.Image;
+using static ROR2VoidReaverModFixed.XanCode.Data.IconTexJobImproved;
+using ROR2VoidReaverModFixed.XanCode.Data;
 
 namespace FubukiMods.Modules {
 
@@ -162,6 +166,94 @@ namespace FubukiMods.Modules {
 			variants[variantIndex] = newVariant;
 			family.variants = variants;
 			Log.LogMessage($"Appended new skill in slot \"{slotName}\": {definition.skillNameToken}");
+		}
+
+		/// <summary>
+		/// Added by Xan. Temporary solution for the lack of skins on the model.
+		/// </summary>
+		/// <param name="bodyContainer">The prefab containing the character body and all the related stuff.</param>
+		public static void AddSkins(GameObject bodyContainer) {
+			Renderer[] renderers = bodyContainer.GetComponentsInChildren<Renderer>();
+			ModelLocator component = bodyContainer.GetComponent<ModelLocator>();
+			GameObject effectiveRoot = component.modelTransform.gameObject;
+
+			LoadoutAPI.SkinDefInfo defaultSkin = new LoadoutAPI.SkinDefInfo {
+				Icon = SkinIconCreator.CreateSkinIcon(
+					new Color32(24, 1, 33, 255),
+					new Color32(52, 84, 108, 255),
+					new Color32(239, 151, 227, 255),
+					new Color32(11, 34, 127, 255)
+				),
+				NameToken = Lang.DEFAULT_SKIN,
+				RootObject = effectiveRoot,
+				BaseSkins = Ext.NewEmpty<SkinDef>(),
+				GameObjectActivations = Ext.NewEmpty<SkinDef.GameObjectActivation>(),
+				RendererInfos = new CharacterModel.RendererInfo[] {
+					// TODO: Do I actually have to create these?
+					new CharacterModel.RendererInfo {
+						defaultMaterial = renderers[0].material,
+						defaultShadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On,
+						ignoreOverlays = false,
+						renderer = renderers[0]
+					},
+					new CharacterModel.RendererInfo {
+						defaultMaterial = renderers[1].material,
+						defaultShadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On,
+						ignoreOverlays = false,
+						renderer = renderers[1]
+					},
+				},
+				ProjectileGhostReplacements = Ext.NewEmpty<SkinDef.ProjectileGhostReplacement>(),
+				MinionSkinReplacements = Ext.NewEmpty<SkinDef.MinionSkinReplacement>()
+			};
+
+			// lmfao
+			// if one of you knows how to actually store + address the materials for this let me know
+			GameObject ally = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Nullifier/NullifierAllyBody.prefab").WaitForCompletion();
+			Renderer[] allyRenderers = ally.GetComponentsInChildren<Renderer>();
+
+			Material mtl0 = allyRenderers[0].material;
+			Material mtl1 = allyRenderers[1].material;
+
+			LoadoutAPI.SkinDefInfo ghostSkin = new LoadoutAPI.SkinDefInfo {
+				Icon = SkinIconCreator.CreateSkinIcon(
+					new Color32(183, 172, 175, 255),
+					new Color32(78, 117, 145, 255),
+					new Color32(152, 151, 227, 255),
+					new Color32(54, 169, 226, 255)
+				),
+				NameToken = Lang.GHOST_SKIN,
+				RootObject = effectiveRoot,
+				BaseSkins = Ext.NewEmpty<SkinDef>(),
+				GameObjectActivations = Ext.NewEmpty<SkinDef.GameObjectActivation>(),
+				RendererInfos = new CharacterModel.RendererInfo[] {
+					// TODO: Do I actually have to create these?
+					new CharacterModel.RendererInfo {
+						defaultMaterial = mtl0,
+						defaultShadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On,
+						ignoreOverlays = false,
+						renderer = renderers[0]
+					},
+					new CharacterModel.RendererInfo {
+						defaultMaterial = mtl1,
+						defaultShadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On,
+						ignoreOverlays = false,
+						renderer = renderers[1]
+					},
+				},
+				ProjectileGhostReplacements = Ext.NewEmpty<SkinDef.ProjectileGhostReplacement>(),
+				MinionSkinReplacements = Ext.NewEmpty<SkinDef.MinionSkinReplacement>()
+			};
+
+			ModelSkinController ctrl = effectiveRoot.GetOrCreateComponent<ModelSkinController>(out bool justCreatedController);
+			if (justCreatedController) {
+				ctrl.characterModel = bodyContainer.GetComponent<CharacterModel>();
+				ctrl.skins = Ext.NewEmpty<SkinDef>();
+			}
+
+			LoadoutAPI.AddSkinToCharacter(bodyContainer, defaultSkin);
+			LoadoutAPI.AddSkinToCharacter(bodyContainer, ghostSkin);
+
 		}
 #pragma warning restore Publicizer001
 	}

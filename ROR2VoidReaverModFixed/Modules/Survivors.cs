@@ -3,8 +3,8 @@ using KinematicCharacterController;
 using R2API;
 using R2API.Utils;
 using RoR2;
-using ROR2VoidReaverModFixed.FubukiMods.XanInterop;
 using ROR2VoidReaverModFixed.XanCode;
+using ROR2VoidReaverModFixed.XanCode.Image;
 using UnityEngine;
 using UnityEngine.Networking;
 using XanVoidReaverEdit;
@@ -13,7 +13,8 @@ using LunarPrimaryReplacementSkill = On.RoR2.Skills.LunarPrimaryReplacementSkill
 using SerializableEntityStateType = EntityStates.SerializableEntityStateType;
 using SkillDef = RoR2.Skills.SkillDef;
 
-namespace FubukiMods.Modules {
+namespace FubukiMods.Modules
+{
 
 	/// <summary>
 	/// The survivor main module. This was originally written by LuaFubuki but was rewritten and refactored by Xan.
@@ -23,21 +24,27 @@ namespace FubukiMods.Modules {
 			GameObject playerBodyContainer = Tools.CreateBody("PlayerNullifierBody", "RoR2/Base/Nullifier/NullifierBody.prefab");
 			GameObject playerBodyLocator = PrefabAPI.InstantiateClone(playerBodyContainer.GetComponent<ModelLocator>().modelBaseTransform.gameObject, "PlayerNullifierBodyDisplay");
 			playerBodyLocator.AddComponent<NetworkIdentity>();
+			CharacterBody body = playerBodyContainer.GetComponent<CharacterBody>();
 
 			Interactor interactor = playerBodyContainer.GetComponent<Interactor>();
-			
-			if (!Configuration.UseFullSizeCharacter) {
+
+			if (Configuration.UseFullSizeCharacter) {
+				interactor.maxInteractionDistance = 11f;
+				ModelLocator locator = playerBodyContainer.GetComponent<ModelLocator>();
+				locator.onModelChanged += OnPlayerReaverModelChanged;
+			} else {
 				// We ARE NOT using full size character. Downscale.
 				GameObject baseTransform = playerBodyContainer.GetComponent<ModelLocator>().modelBaseTransform.gameObject;
 				baseTransform.transform.localScale = Vector3.one * 0.5f;
 				baseTransform.transform.Translate(new Vector3(0f, 4f, 0f));
-				
 				foreach (KinematicCharacterMotor kinematicCharacterMotor in playerBodyContainer.GetComponentsInChildren<KinematicCharacterMotor>()) {
-					kinematicCharacterMotor.SetCapsuleDimensions(kinematicCharacterMotor.Capsule.radius * 0.4f, kinematicCharacterMotor.Capsule.height * 0.4f, 1.25f);
+					// * 0.4f
+					// + 1.25f
+					// Up to *0.5f and +1.5f
+					// This seems to fix the bungus issue!
+					kinematicCharacterMotor.SetCapsuleDimensions(kinematicCharacterMotor.Capsule.radius * 0.5f, kinematicCharacterMotor.Capsule.height * 0.5f, 1.5f);
 				}
 				interactor.maxInteractionDistance = 5f;
-			} else {
-				interactor.maxInteractionDistance = 10f;
 			}
 			CameraTargetParams camTargetParams = playerBodyContainer.GetComponent<CameraTargetParams>();
 			CharacterCameraParams characterCameraParams = ScriptableObject.CreateInstance<CharacterCameraParams>();
@@ -51,11 +58,12 @@ namespace FubukiMods.Modules {
 			}
 
 			playerBodyContainer.GetComponent<SetStateOnHurt>().canBeHitStunned = false;
-			playerBodyContainer.GetComponent<CharacterDeathBehavior>().deathState = new SerializableEntityStateType(typeof(Skills.VoidDeath));
-
-			CharacterBody body = playerBodyContainer.GetComponent<CharacterBody>();
+			CharacterDeathBehavior deathBehavior = playerBodyContainer.GetComponent<CharacterDeathBehavior>();
+			deathBehavior.deathState = new SerializableEntityStateType(typeof(Skills.VoidDeath));
+			
 			body.aimOriginTransform.Translate(new Vector3(0f, 0f, 0f));
-			body.bodyFlags = CharacterBody.BodyFlags.ImmuneToExecutes | CharacterBody.BodyFlags.Void;
+			body.bodyColor = new Color(0.867f, 0.468f, 0.776f);
+			body.bodyFlags = CharacterBody.BodyFlags.ImmuneToExecutes | CharacterBody.BodyFlags.Void | CharacterBody.BodyFlags.ImmuneToVoidDeath;
 			body.baseDamage = Configuration.BaseDamage;
 			body.levelDamage = Configuration.LevelDamage;
 			body.baseCrit = Configuration.BaseCritChance;
@@ -76,8 +84,17 @@ namespace FubukiMods.Modules {
 			body.baseAttackSpeed = Configuration.BaseAttackSpeed;
 			body.levelAttackSpeed = Configuration.LevelAttackSpeed;
 			body.baseNameToken = Lang.SURVIVOR_NAME;
-			body.portraitIcon = Images.Portrait.texture;
+			body.portraitIcon = CommonImages.Portrait.texture;
 			ContentAddition.AddBody(playerBodyContainer);
+
+			// Passive stuff:
+			SkillLocator skillLoc = playerBodyContainer.GetComponent<SkillLocator>();
+			skillLoc.passiveSkill = default;
+			skillLoc.passiveSkill.enabled = true;
+			skillLoc.passiveSkill.keywordToken = Lang.PASSIVE_KEYWORD;
+			skillLoc.passiveSkill.skillNameToken = Lang.PASSIVE_NAME;
+			skillLoc.passiveSkill.skillDescriptionToken = Lang.PASSIVE_DESC;
+			skillLoc.passiveSkill.icon = CommonImages.Passive;
 
 			// Primary, triple shot:
 			ContentAddition.AddEntityState<Skills.VoidPrimarySequenceShot>(out _);
@@ -100,7 +117,7 @@ namespace FubukiMods.Modules {
 			primaryTriple.stockToConsume = 0;
 			primaryTriple.skillNameToken = Lang.SKILL_PRIMARY_TRIPLESHOT_NAME;
 			primaryTriple.skillDescriptionToken = Lang.SKILL_PRIMARY_TRIPLESHOT_DESC;
-			primaryTriple.icon = Images.PrimaryTripleShotIcon;
+			primaryTriple.icon = CommonImages.PrimaryTripleShotIcon;
 			Tools.AddSkill(playerBodyContainer, primaryTriple, "primary", 0);
 
 			// Primary, spread shot:
@@ -124,7 +141,7 @@ namespace FubukiMods.Modules {
 			primarySpread.stockToConsume = 0;
 			primarySpread.skillNameToken = Lang.SKILL_PRIMARY_SPREAD_NAME;
 			primarySpread.skillDescriptionToken = Lang.SKILL_PRIMARY_SPREAD_DESC;
-			primarySpread.icon = Images.PrimarySpreadShotIcon;
+			primarySpread.icon = CommonImages.PrimarySpreadShotIcon;
 			Tools.AddSkill(playerBodyContainer, primarySpread, "primary", 1);
 
 			// Secondary
@@ -148,7 +165,7 @@ namespace FubukiMods.Modules {
 			secondary.stockToConsume = 1;
 			secondary.skillNameToken = Lang.SKILL_SECONDARY_NAME;
 			secondary.skillDescriptionToken = Lang.SKILL_SECONDARY_DESC;
-			secondary.icon = Images.SecondaryIcon;
+			secondary.icon = CommonImages.SecondaryIcon;
 			Tools.AddSkill(playerBodyContainer, secondary, "secondary", 0);
 
 			// Utility
@@ -172,7 +189,7 @@ namespace FubukiMods.Modules {
 			utility.stockToConsume = 1;
 			utility.skillNameToken = Lang.SKILL_UTILITY_NAME;
 			utility.skillDescriptionToken = Lang.SKILL_UTILITY_DESC;
-			utility.icon = Images.UtilityIcon;
+			utility.icon = CommonImages.UtilityIcon;
 			Tools.AddSkill(playerBodyContainer, utility, "utility", 0);
 
 			ContentAddition.AddEntityState<Skills.VoidSpecialOnDemand>(out _);
@@ -195,7 +212,7 @@ namespace FubukiMods.Modules {
 			specialWeak.stockToConsume = 1;
 			specialWeak.skillNameToken = Lang.SKILL_SPECIAL_WEAK_NAME;
 			specialWeak.skillDescriptionToken = Lang.SKILL_SPECIAL_WEAK_DESC;
-			specialWeak.icon = Images.SpecialIcon;
+			specialWeak.icon = CommonImages.SpecialWeakIcon;
 			Tools.AddSkill(playerBodyContainer, specialWeak, "special", 0);
 
 			ContentAddition.AddEntityState<Skills.VoidSpecialSuicide>(out _);
@@ -218,8 +235,10 @@ namespace FubukiMods.Modules {
 			specialSuicide.stockToConsume = 1;
 			specialSuicide.skillNameToken = Lang.SKILL_SPECIAL_SUICIDE_NAME;
 			specialSuicide.skillDescriptionToken = Lang.SKILL_SPECIAL_SUICIDE_DESC;
-			specialSuicide.icon = Images.SpecialIcon;
+			specialSuicide.icon = CommonImages.SpecialSuicideIcon;
 			Tools.AddSkill(playerBodyContainer, specialSuicide, "special", 1);
+
+			Tools.AddSkins(playerBodyContainer);
 
 			SurvivorDef survivorDef = ScriptableObject.CreateInstance<SurvivorDef>();
 			survivorDef.bodyPrefab = playerBodyContainer;
@@ -240,8 +259,47 @@ namespace FubukiMods.Modules {
 				LunarPrimaryReplacementSkill.GetMaxStock += OverrideLunarPrimaryMaxStock;
 				LunarPrimaryReplacementSkill.GetRechargeStock += OverrideLunarPrimaryRechargeStock;
 			}
+			if (Configuration.VoidImmunity) {
+				On.RoR2.CharacterBody.SetBuffCount += InterceptBuffsEvent;
+				On.RoR2.HealthComponent.TakeDamage += InterceptTakeDamage;
+			}
 		}
-		
+
+		private static void OnPlayerReaverModelChanged(Transform obj) {
+			Animator animator = obj.GetComponent<Animator>();
+			
+			if (animator != null) {
+				Log.LogMessage("Player is using the full size reaver model, the animation speed of their latest spawned model has been reduced to 0.825f to correct a speed error.");
+				animator.speed = 0.825f;
+				return;
+			}
+			Log.LogMessage("Player changed models, but no animator was present? " + obj?.ToString() ?? "null");
+		}
+
+		private static void InterceptTakeDamage(On.RoR2.HealthComponent.orig_TakeDamage orig, HealthComponent @this, DamageInfo dmg) {
+			if (@this.body != null && @this.body.baseNameToken == Lang.SURVIVOR_NAME) {
+				if (dmg.attacker == null && dmg.inflictor == null && dmg.damageType == (DamageType.BypassBlock | DamageType.BypassArmor)) {
+					Log.LogDebug("Aborting what I believe to be Void atmosphere damage (no source, no inflictor, type bypasses blocks and armor only).");
+					return;
+				}
+			}
+			orig(@this, dmg);
+		}
+
+		private static void InterceptBuffsEvent(On.RoR2.CharacterBody.orig_SetBuffCount orig, CharacterBody @this, BuffIndex buffType, int newCount) {
+			if (@this.baseNameToken == Lang.SURVIVOR_NAME) {
+				BuffIndex megaVoidFog = DLC1Content.Buffs.VoidRaidCrabWardWipeFog.buffIndex;
+				BuffIndex voidFog = RoR2Content.Buffs.VoidFogStrong.buffIndex;
+				BuffIndex voidFogLite = RoR2Content.Buffs.VoidFogMild.buffIndex;
+				if (buffType == megaVoidFog || buffType == voidFogLite || buffType == voidFog) {
+					orig(@this, buffType, 0); // Always 0
+					return;
+				}
+			}
+			
+			orig(@this, buffType, newCount);
+		}
+
 		#region Legacy Lunar Ability Hooks
 		private static float OverrideLunarPrimaryRechargeInterval(LunarPrimaryReplacementSkill.orig_GetRechargeInterval orig, RoR2.Skills.LunarPrimaryReplacementSkill self, GenericSkill skillSlot) {
 			float rechargeTime = orig.Invoke(self, skillSlot);
