@@ -7,17 +7,16 @@ using UnityEngine.AddressableAssets;
 using FubukiMods.Modules;
 using XanVoidReaverEdit;
 using ROR2VoidReaverModFixed.XanCode;
+using ROR2VoidReaverModFixed.XanCode.Data;
+using static R2API.DamageAPI;
 
 namespace FubukiMods {
-	[R2APISubmoduleDependency(new string[]
-	{
-		nameof(PrefabAPI),
-		nameof(LoadoutAPI),
-		nameof(LanguageAPI)
-	})]
-	[BepInDependency("com.bepis.r2api", BepInDependency.DependencyFlags.HardDependency)]
-	[NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod, VersionStrictness.EveryoneNeedSameModVersion)]
-	[BepInPlugin("com.Fubuki.VoidReaver.XansEdit", "Void Reaver Survivor (Xan's Edit)", "1.1.1")]
+	[
+		BepInDependency(R2API.R2API.PluginGUID),
+		R2APISubmoduleDependency(nameof(PrefabAPI), nameof(LoadoutAPI), nameof(LanguageAPI), nameof(DamageAPI)),
+		NetworkCompatibility
+	]
+	[BepInPlugin("com.Fubuki.VoidReaver.XansEdit", "Void Reaver Survivor (Xan's Edit)", "2.0.0")]
 	public class MainPlugin : BaseUnityPlugin {
 
 		void Awake() {
@@ -25,6 +24,7 @@ namespace FubukiMods {
 			Log.LogMessage("Initializing Void Reaver Mod Edit");
 			Configuration.Init(Config);
 			Lang.Init();
+			XanConstants.Init();
 
 			PrimaryProjectile = PrefabAPI.InstantiateClone(Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarSkillReplacements/LunarNeedleProjectile.prefab").WaitForCompletion(), "VoidPrimaryAttack", true);
 			if (Configuration.UseFullSizeCharacter) {
@@ -62,11 +62,18 @@ namespace FubukiMods {
 			reaveBaseExplosion.blastDamageCoefficient = 1f;
 			reaveBaseExplosion.blastProcCoefficient = 1f;
 			reaveBaseExplosion.totalDamageMultiplier = 1f;
+			if (Configuration.UseFullSizeCharacter) {
+				// We ARE using full size character
+				reaveBaseExplosion.blastRadius *= 1.25f;
+			}
 			reaveDamage.damage = 1f;
 			reaveDamage.damageColorIndex = RoR2.DamageColorIndex.Void;
 			reaveDamage.damageType = RoR2.DamageType.VoidDeath | RoR2.DamageType.BypassArmor | RoR2.DamageType.BypassBlock | RoR2.DamageType.BypassOneShotProtection;//RoR2.DamageType.LunarSecondaryRootOnHit;
-
 			reaveImpactExplosion.lifetime = Skills.VoidDeath.REAVE_DURATION;
+
+			ModdedDamageTypeHolderComponent damageTypeHolder = ReaveProjectile.AddComponent<ModdedDamageTypeHolderComponent>();
+			damageTypeHolder.Add(XanConstants.VoidCollapse);
+
 			ContentAddition.AddProjectile(ReaveProjectile);
 
 			Survivors.Init();
@@ -78,7 +85,7 @@ namespace FubukiMods {
 		public static GameObject PrimaryProjectile { get; private set; }
 
 		/// <summary>
-		/// The "void portal" attack for reavers
+		/// The "void portal" attack for reavers, which is the NPC's default attack
 		/// </summary>
 		public static GameObject SecondaryProjectile { get; private set; }
 

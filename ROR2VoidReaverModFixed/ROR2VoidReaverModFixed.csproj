@@ -20,6 +20,28 @@
     <EmbeddedResource Remove="libs\**" />
     <None Remove="libs\**" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="icon\Collapse.png" />
+    <None Remove="icon\DefaultPalette.png" />
+    <None Remove="icon\Dive.png" />
+    <None Remove="icon\Portrait.png" />
+    <None Remove="icon\Reave.png" />
+    <None Remove="icon\Undertow.png" />
+    <None Remove="icon\VoidImpulse.png" />
+    <None Remove="icon\VoidSpread.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="icon\Collapse.png" />
+    <EmbeddedResource Include="icon\DefaultPalette.png" />
+    <EmbeddedResource Include="icon\Dive.png" />
+    <EmbeddedResource Include="icon\Portrait.png" />
+    <EmbeddedResource Include="icon\Reave.png" />
+    <EmbeddedResource Include="icon\Undertow.png" />
+    <EmbeddedResource Include="icon\VoidImpulse.png" />
+    <EmbeddedResource Include="icon\VoidSpread.png" />
+  </ItemGroup>
   
   <ItemGroup>
     <PackageReference Include="BepInEx.Analyzers" Version="1.0.*">
