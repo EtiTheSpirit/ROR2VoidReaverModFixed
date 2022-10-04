@@ -21,23 +21,23 @@ namespace FubukiMods.Modules
 	/// </summary>
 	public class Survivors {
 		public static void Init() {
-			GameObject playerBodyContainer = Tools.CreateBody("PlayerNullifierBody", "RoR2/Base/Nullifier/NullifierBody.prefab");
-			GameObject playerBodyLocator = PrefabAPI.InstantiateClone(playerBodyContainer.GetComponent<ModelLocator>().modelBaseTransform.gameObject, "PlayerNullifierBodyDisplay");
+			GameObject playerBodyPrefab = Tools.CreateBody("PlayerNullifierBody", "RoR2/Base/Nullifier/NullifierBody.prefab");
+			GameObject playerBodyLocator = PrefabAPI.InstantiateClone(playerBodyPrefab.GetComponent<ModelLocator>().modelBaseTransform.gameObject, "PlayerNullifierBodyDisplay");
 			playerBodyLocator.AddComponent<NetworkIdentity>();
-			CharacterBody body = playerBodyContainer.GetComponent<CharacterBody>();
+			CharacterBody body = playerBodyPrefab.GetComponent<CharacterBody>();
 
-			Interactor interactor = playerBodyContainer.GetComponent<Interactor>();
+			Interactor interactor = playerBodyPrefab.GetComponent<Interactor>();
 
 			if (Configuration.UseFullSizeCharacter) {
 				interactor.maxInteractionDistance = 11f;
-				ModelLocator locator = playerBodyContainer.GetComponent<ModelLocator>();
+				ModelLocator locator = playerBodyPrefab.GetComponent<ModelLocator>();
 				locator.onModelChanged += OnPlayerReaverModelChanged;
 			} else {
 				// We ARE NOT using full size character. Downscale.
-				GameObject baseTransform = playerBodyContainer.GetComponent<ModelLocator>().modelBaseTransform.gameObject;
+				GameObject baseTransform = playerBodyPrefab.GetComponent<ModelLocator>().modelBaseTransform.gameObject;
 				baseTransform.transform.localScale = Vector3.one * 0.5f;
 				baseTransform.transform.Translate(new Vector3(0f, 4f, 0f));
-				foreach (KinematicCharacterMotor kinematicCharacterMotor in playerBodyContainer.GetComponentsInChildren<KinematicCharacterMotor>()) {
+				foreach (KinematicCharacterMotor kinematicCharacterMotor in playerBodyPrefab.GetComponentsInChildren<KinematicCharacterMotor>()) {
 					// * 0.4f
 					// + 1.25f
 					// Up to *0.5f and +1.5f
@@ -46,7 +46,7 @@ namespace FubukiMods.Modules
 				}
 				interactor.maxInteractionDistance = 5f;
 			}
-			CameraTargetParams camTargetParams = playerBodyContainer.GetComponent<CameraTargetParams>();
+			CameraTargetParams camTargetParams = playerBodyPrefab.GetComponent<CameraTargetParams>();
 			CharacterCameraParams characterCameraParams = ScriptableObject.CreateInstance<CharacterCameraParams>();
 			camTargetParams.cameraParams = characterCameraParams;
 			if (!Configuration.UseFullSizeCharacter) {
@@ -57,8 +57,8 @@ namespace FubukiMods.Modules
 				characterCameraParams.data.pivotVerticalOffset = 0f;
 			}
 
-			playerBodyContainer.GetComponent<SetStateOnHurt>().canBeHitStunned = false;
-			CharacterDeathBehavior deathBehavior = playerBodyContainer.GetComponent<CharacterDeathBehavior>();
+			playerBodyPrefab.GetComponent<SetStateOnHurt>().canBeHitStunned = false;
+			CharacterDeathBehavior deathBehavior = playerBodyPrefab.GetComponent<CharacterDeathBehavior>();
 			deathBehavior.deathState = new SerializableEntityStateType(typeof(Skills.VoidDeath));
 			
 			body.aimOriginTransform.Translate(new Vector3(0f, 0f, 0f));
@@ -85,10 +85,10 @@ namespace FubukiMods.Modules
 			body.levelAttackSpeed = Configuration.LevelAttackSpeed;
 			body.baseNameToken = Lang.SURVIVOR_NAME;
 			body.portraitIcon = CommonImages.Portrait.texture;
-			ContentAddition.AddBody(playerBodyContainer);
+			ContentAddition.AddBody(playerBodyPrefab);
 
 			// Passive stuff:
-			SkillLocator skillLoc = playerBodyContainer.GetComponent<SkillLocator>();
+			SkillLocator skillLoc = playerBodyPrefab.GetComponent<SkillLocator>();
 			skillLoc.passiveSkill = default;
 			skillLoc.passiveSkill.enabled = true;
 			skillLoc.passiveSkill.keywordToken = Lang.PASSIVE_KEYWORD;
@@ -118,7 +118,7 @@ namespace FubukiMods.Modules
 			primaryTriple.skillNameToken = Lang.SKILL_PRIMARY_TRIPLESHOT_NAME;
 			primaryTriple.skillDescriptionToken = Lang.SKILL_PRIMARY_TRIPLESHOT_DESC;
 			primaryTriple.icon = CommonImages.PrimaryTripleShotIcon;
-			Tools.AddSkill(playerBodyContainer, primaryTriple, "primary", 0);
+			Tools.AddSkill(playerBodyPrefab, primaryTriple, "primary", 0);
 
 			// Primary, spread shot:
 			ContentAddition.AddEntityState<Skills.VoidPrimaryFiveSpread>(out _);
@@ -142,7 +142,7 @@ namespace FubukiMods.Modules
 			primarySpread.skillNameToken = Lang.SKILL_PRIMARY_SPREAD_NAME;
 			primarySpread.skillDescriptionToken = Lang.SKILL_PRIMARY_SPREAD_DESC;
 			primarySpread.icon = CommonImages.PrimarySpreadShotIcon;
-			Tools.AddSkill(playerBodyContainer, primarySpread, "primary", 1);
+			Tools.AddSkill(playerBodyPrefab, primarySpread, "primary", 1);
 
 			// Secondary
 			ContentAddition.AddEntityState<Skills.VoidSecondary>(out _);
@@ -166,7 +166,7 @@ namespace FubukiMods.Modules
 			secondary.skillNameToken = Lang.SKILL_SECONDARY_NAME;
 			secondary.skillDescriptionToken = Lang.SKILL_SECONDARY_DESC;
 			secondary.icon = CommonImages.SecondaryIcon;
-			Tools.AddSkill(playerBodyContainer, secondary, "secondary", 0);
+			Tools.AddSkill(playerBodyPrefab, secondary, "secondary", 0);
 
 			// Utility
 			ContentAddition.AddEntityState<Skills.VoidUtility>(out _);
@@ -190,7 +190,7 @@ namespace FubukiMods.Modules
 			utility.skillNameToken = Lang.SKILL_UTILITY_NAME;
 			utility.skillDescriptionToken = Lang.SKILL_UTILITY_DESC;
 			utility.icon = CommonImages.UtilityIcon;
-			Tools.AddSkill(playerBodyContainer, utility, "utility", 0);
+			Tools.AddSkill(playerBodyPrefab, utility, "utility", 0);
 
 			ContentAddition.AddEntityState<Skills.VoidSpecialOnDemand>(out _);
 			SkillDef specialWeak = ScriptableObject.CreateInstance<SkillDef>();
@@ -213,7 +213,7 @@ namespace FubukiMods.Modules
 			specialWeak.skillNameToken = Lang.SKILL_SPECIAL_WEAK_NAME;
 			specialWeak.skillDescriptionToken = Lang.SKILL_SPECIAL_WEAK_DESC;
 			specialWeak.icon = CommonImages.SpecialWeakIcon;
-			Tools.AddSkill(playerBodyContainer, specialWeak, "special", 0);
+			Tools.AddSkill(playerBodyPrefab, specialWeak, "special", 0);
 
 			ContentAddition.AddEntityState<Skills.VoidSpecialSuicide>(out _);
 			SkillDef specialSuicide = ScriptableObject.CreateInstance<SkillDef>();
@@ -236,12 +236,12 @@ namespace FubukiMods.Modules
 			specialSuicide.skillNameToken = Lang.SKILL_SPECIAL_SUICIDE_NAME;
 			specialSuicide.skillDescriptionToken = Lang.SKILL_SPECIAL_SUICIDE_DESC;
 			specialSuicide.icon = CommonImages.SpecialSuicideIcon;
-			Tools.AddSkill(playerBodyContainer, specialSuicide, "special", 1);
+			Tools.AddSkill(playerBodyPrefab, specialSuicide, "special", 1);
 
-			Tools.AddSkins(playerBodyContainer);
+			Tools.AddSkins(playerBodyPrefab);
 
 			SurvivorDef survivorDef = ScriptableObject.CreateInstance<SurvivorDef>();
-			survivorDef.bodyPrefab = playerBodyContainer;
+			survivorDef.bodyPrefab = playerBodyPrefab;
 			survivorDef.descriptionToken = Lang.SURVIVOR_DESC;
 			survivorDef.displayNameToken = Lang.SURVIVOR_NAME;
 			survivorDef.outroFlavorToken = Lang.SURVIVOR_OUTRO;
@@ -251,7 +251,7 @@ namespace FubukiMods.Modules
 			survivorDef.desiredSortPosition = 44.44f;
 			ContentAddition.AddSurvivorDef(survivorDef);
 
-			Tools.FinalizeBody(playerBodyContainer.GetComponent<SkillLocator>());
+			Tools.FinalizeBody(playerBodyPrefab.GetComponent<SkillLocator>());
 
 			if (Configuration.UseLegacyLunarMechanics) {
 				GhostUtilitySkillState.OnEnter += OverrideLunarGhostStateDuration;

@@ -16,9 +16,36 @@ Please take your time to give thanks to LuaFubuki for allowing me to continue th
 
 ## Known Bugs
 * I anticipate issues for Full Size option (this may be removed in the future, it's more of a test for giggles)
-* Bustling Fungus has difficulty activating. It plays the sound but does not spawn the AoE unless you are on flat ground. This is likely due to the hitbox placement of the character.
+
+## Special Thanks To...
+* LuaFubuki, for open sourcing the mod.
+* Desync and Minno (some of my buddies) for doing multiplayer testing with me.
+* ROR2 Modding Discord for making sure I was stumbling around the game's codebase in at least the *mostly* correct direction.
 
 ## Changelog
+### 2.0.0
+Wohaho!
+
+#### The Big Changes
+* **Added new icons** for the character and all of its abilities. For the purists to the classic mod out there, this is an option, and you can use your configuration to make it use the old icons. This will be supported for the rest of the foreseeable future.
+* **Added skins** for the character, one of which is the default skin and the other one which makes you look like the variant from the [Newly Hatched Zoea](https://riskofrain2.fandom.com/wiki/Newly_Hatched_Zoea) item (friend colored) ((please stop shooting me it was only funny that one time))
+
+#### Fixes
+* *Ideally* fixed the issue where Bustling Fungus would not spawn its AoE. The player might float a slight, almost imperceptible height above the ground, but it looks close enough to ordinary Void Reavers that it doesn't really matter.
+* Fixed a bug causing Reave to not do the right amount of self-damage.
+
+#### Mechanical Changes
+* [EXPERIMENTAL] Added the option to override Reave and Collapse such that it damages players. It is off by default, and was mostly introduced because that's how friendly Void creatures work anyway.
+* [EXPERIMENTAL] Added the option to become immune to environmental void damage and fog, for the people who got irked by the fact that the literal void entity was hurt by its native environment (read: me). This should mostly work well, *the primary issue is that it might unintentionally block damage from other valid sources.* It has to guess if something is doing void damage by the distinct lack of a source for the damage, and the specific combo of types for the damage.
+
+#### Art and Lore Changes
+* Added a passive ability slot, and reorganized the description of the survivor and abilities.
+
+#### Configuration Changes
+* Added the ability to configure the speed, regeneration, and duration of Dive.
+* As mentioned above, Reave/Collapse PvP damage can be toggled.
+* As mentioned above, immunity to Void environments can be toggled.
+
 ### 1.1.1
 Includes a change I meant to include in 1.1.0 but forgot to add. Nice.
 

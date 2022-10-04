@@ -576,8 +576,14 @@ namespace FubukiMods.Modules {
 			/// </summary>
 			public const float REAVE_DURATION = 2.5f;
 
+			private bool _hasDeleted = false;
+
 			public override void OnEnter() {
+				Log.LogMessage("You are dead. Soup rice beeg not.");
+				isPlayerDeath = characterBody.master != null && characterBody.master.GetComponent<PlayerCharacterMasterController>() != null;
+
 				PlayCrossfade("Body", "Death", "Death.playbackRate", REAVE_DURATION, 0.1f);
+
 				if (isAuthority) {
 					Transform muzzleTransform = FindModelChild(DeathState.muzzleName);
 					if (muzzleTransform != null) {
@@ -591,16 +597,41 @@ namespace FubukiMods.Modules {
 					} else {
 						Log.LogError("WARNING: Failed to execute death explosion! The character does not have a muzzle transform. Were you deleted or something? You good? Did the furries read \"muzzle\" and steal it for their diabolical activities (if so then lmao also L)?");
 					}
+
 					EffectManager.SpawnEffect(voidDeathEffect, new EffectData {
 						origin = characterBody.corePosition,
 						scale = characterBody.bestFitRadius
 					}, true);
 				}
 
-				// Schedule the character model for deletion after 2.5s
-				if (cachedModelTransform.gameObject) {
-					Object.Destroy(cachedModelTransform.gameObject, REAVE_DURATION);
+				if (isPlayerDeath && characterBody != null) {
+					Object.Instantiate(
+						LegacyResourcesAPI.Load<GameObject>("Prefabs/TemporaryVisualEffects/PlayerDeathEffect"), 
+						characterBody.corePosition, 
+						Quaternion.identity
+					).GetComponent<LocalCameraEffect>().targetCharacter = characterBody.gameObject;
 				}
+			}
+
+			public override void FixedUpdate() {
+				fixedAge += Time.fixedDeltaTime; // Since I do not want to call base
+
+				if (fixedAge >= REAVE_DURATION && !_hasDeleted) {
+					_hasDeleted = true;
+					/*
+					DestroyModel();
+					Destroy(gameObject);
+					*/
+					Transform mdlTrs = characterBody.modelLocator.modelTransform;
+					if (mdlTrs != null) {
+						Destroy(mdlTrs.gameObject);
+						Log.LogMessage("Fake-deleted player character.");
+					}
+				}
+			}
+
+			public override void OnExit() {
+				base.OnExit();
 			}
 		}
 
