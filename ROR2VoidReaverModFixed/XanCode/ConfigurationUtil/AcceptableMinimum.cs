@@ -8,6 +8,7 @@ namespace ROR2VoidReaverModFixed.XanCode.ConfigurationUtil {
 	/// <summary>
 	/// A non-generic version of <see cref="AcceptableMinimum"/> mostly for reflection.
 	/// </summary>
+	[Obsolete("This does not work as intended at this time (is it a bug with BepInEx?)")]
 	public abstract class AcceptableMinimum : AcceptableValueBase {
 		protected AcceptableMinimum(Type valueType) : base(valueType) { }
 	}
