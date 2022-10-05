@@ -61,7 +61,7 @@ namespace FubukiMods.Modules {
 		/// <param name="canCrit"></param>
 		/// <param name="isDeath"></param>
 		/// <returns></returns>
-		public static FireProjectileInfo GetVoidExplosionFireInfo(BaseState state, GameObject projectile, Transform muzzleTransform, float damageMultiplier, bool isDeath = false) {
+		public static FireProjectileInfo GetVoidExplosionFireInfo(BaseState state, GameObject projectile, Transform muzzleTransform, float damageMultiplier) {
 			FireProjectileInfo deletionProjectile = default;
 			deletionProjectile.projectilePrefab = projectile;
 			deletionProjectile.position = muzzleTransform.position;
@@ -69,10 +69,6 @@ namespace FubukiMods.Modules {
 			deletionProjectile.owner = state.characterBody.gameObject; //Configuration.VoidDeathFriendlyFire ? null : state.characterBody.gameObject;
 			deletionProjectile.damage = state.damageStat * damageMultiplier;
 			deletionProjectile.damageColorIndex = DamageColorIndex.Void;
-
-			if (isDeath && Configuration.IsVoidDeathInstakill) {
-				deletionProjectile.damage = float.MaxValue;
-			}
 
 			return deletionProjectile;
 		}
@@ -492,7 +488,7 @@ namespace FubukiMods.Modules {
 				Transform muzzleTransform = FindModelChild(DeathState.muzzleName);
 				PlayCrossfade("Body", "Death", "Death.playbackRate", VoidDeath.REAVE_DURATION, 0.1f);
 				if (isAuthority && muzzleTransform != null) {
-					ProjectileManager.instance.FireProjectile(GetVoidExplosionFireInfo(this, Projectile, muzzleTransform, Configuration.BaseSpecialDamage, false));
+					ProjectileManager.instance.FireProjectile(GetVoidExplosionFireInfo(this, Projectile, muzzleTransform, Configuration.BaseSpecialDamage));
 				} else if (muzzleTransform == null) {
 					Log.LogError("WARNING: Failed to execute Reave ability! The character does not have a muzzle transform. Were you deleted or something? You good? Did the furries read \"muzzle\" and steal it for their diabolical activities (if so then lmao also L)?");
 				}
@@ -598,8 +594,7 @@ namespace FubukiMods.Modules {
 							this,
 							MainPlugin.ReaveProjectile,
 							muzzleTransform,
-							Configuration.BaseDeathDamage,
-							true
+							Configuration.BaseDeathDamage
 						));
 					} else {
 						Log.LogError("WARNING: Failed to execute death explosion! The character does not have a muzzle transform. Were you deleted or something? You good? Did the furries read \"muzzle\" and steal it for their diabolical activities (if so then lmao also L)?");

@@ -239,7 +239,7 @@ namespace FubukiMods.Modules {
 			specialSuicide.icon = CommonImages.SpecialSuicideIcon;
 			Tools.AddSkill(playerBodyPrefab, specialSuicide, "special", 1);
 
-			Tools.AddSkins(playerBodyPrefab);
+			Tools.AddReaverSkins(playerBodyPrefab);
 
 			SurvivorDef survivorDef = ScriptableObject.CreateInstance<SurvivorDef>();
 			survivorDef.bodyPrefab = playerBodyPrefab;
@@ -265,43 +265,21 @@ namespace FubukiMods.Modules {
 				On.RoR2.HealthComponent.TakeDamage += InterceptTakeDamage;
 			}
 
-		//	On.RoR2.HealthComponent.TakeDamage += InterceptTakeDamageGlobally;
+			On.RoR2.HealthComponent.TakeDamage += InterceptTakeDamageGlobally;
 		}
-
-		/*
 		private static void InterceptTakeDamageGlobally(On.RoR2.HealthComponent.orig_TakeDamage orig, HealthComponent @this, DamageInfo damageInfo) {
-			if (Configuration.VoidDeathFriendlyFire) {
-				if (damageInfo.HasModdedDamageType(XanConstants.VoidCollapse)) {
-					Log.LogDebug("Damage is void collapse...");
-					if (damageInfo.attacker != null) {
-						CharacterBody attackerBody = damageInfo.attacker.GetComponent<CharacterBody>();
-						if (attackerBody != null) {
-							Log.LogDebug("Attacker is not nothing...");
-							if (attackerBody != @this.body) {
-								Log.LogDebug("Attacker is not me...");
-								if (attackerBody.baseNameToken == Lang.SURVIVOR_NAME) {
-									Log.LogDebug("Attacker is a reaver. That's everything.");
-									TeamComponent myTeamCmp = @this.body.teamComponent;
-									TeamComponent otherTeamCmp = attackerBody.teamComponent;
-									TeamIndex orgTeam = myTeamCmp.teamIndex;
-									TeamIndex otherTeam = otherTeamCmp.teamIndex;
-#pragma warning disable Publicizer001
-									myTeamCmp._teamIndex = TeamIndex.None;
-									otherTeamCmp._teamIndex = TeamIndex.Neutral;
-									orig(@this, damageInfo);
-									otherTeamCmp._teamIndex = otherTeam;
-									myTeamCmp._teamIndex = orgTeam;
-#pragma warning restore Publicizer001
-									return;
-								}
-							}
-						}
-					}
-				}
+			if (damageInfo.HasModdedDamageType(XanConstants.VoidCollapse)) {
+				bool isBoss = @this.body.isBoss;
+				bool canInstakill = Configuration.IsVoidDeathInstakill && ((!isBoss) || (isBoss && Configuration.AllowInstakillOnBosses));
+				// canInstakill if:
+				// 1: The feature is on, AND
+				// 2a: The character is not a boss, OR
+				// 2b: The character is a boss, and instakilling bosses is allowed
+
+				if (canInstakill) damageInfo.damage = float.MaxValue;
 			}
 			orig(@this, damageInfo);
 		}
-		*/
 
 		private static void OnPlayerReaverModelChanged(Transform obj) {
 			Animator animator = obj.GetComponent<Animator>();
