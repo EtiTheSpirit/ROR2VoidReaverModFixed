@@ -172,7 +172,7 @@ namespace FubukiMods.Modules {
 		/// Added by Xan. Temporary solution for the lack of skins on the model.
 		/// </summary>
 		/// <param name="bodyContainer">The prefab containing the character body and all the related stuff.</param>
-		public static void AddSkins(GameObject bodyContainer) {
+		public static void AddReaverSkins(GameObject bodyContainer) {
 			Renderer[] renderers = bodyContainer.GetComponentsInChildren<Renderer>();
 			ModelLocator component = bodyContainer.GetComponent<ModelLocator>();
 			GameObject effectiveRoot = component.modelTransform.gameObject;
