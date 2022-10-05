@@ -179,10 +179,16 @@ namespace ROR2VoidReaverModFixed.XanCode {
 		/// The amount of damage that the implosion on death does.
 		/// </summary>
 		public static float BaseDeathDamage => _baseDeathDamage.Value;
+
 		/// <summary>
-		/// Not a configurable setting. This is identical to <c><see cref="BaseDeathDamage"/> &gt;= <see cref="XanConstants.VoidDeletionThreshold"/></c>
+		/// Whether or not Collapse should instakill.
 		/// </summary>
-		public static bool IsVoidDeathInstakill => BaseDeathDamage >= XanConstants.VoidDeletionThreshold;
+		public static bool IsVoidDeathInstakill => _collapseInstakill.Value;
+
+		/// <summary>
+		/// Whether or not <see cref="IsVoidDeathInstakill"/>, if true, also applies to bosses.
+		/// </summary>
+		public static bool AllowInstakillOnBosses => _collapseInstakillAffectBoss.Value;
 
 		#endregion
 
@@ -287,6 +293,8 @@ namespace ROR2VoidReaverModFixed.XanCode {
 		#region Collapse
 		private static ConfigEntry<float> _baseDeathDamage;
 		private static ConfigEntry<bool> _collapseFriendlyFire;
+		private static ConfigEntry<bool> _collapseInstakill;
+		private static ConfigEntry<bool> _collapseInstakillAffectBoss;
 		#endregion
 		#endregion
 
@@ -382,8 +390,9 @@ namespace ROR2VoidReaverModFixed.XanCode {
 			_reaveCooldown = cfg.Bind("3d. Character Special", "Reave Cooldown", 30f, StaticDeclareConfigDescription("The amount of time, in seconds, that the player must wait before one stock of their special recharges.", new AcceptableMinimum<float>()));
 			_reaveHealthCostPercent = cfg.Bind("3d. Character Special", "Reave Cost", 0.5f, StaticDeclareConfigDescription("This is the health cost required to perform the \"Reave\" special. The actual manner in which this is used is determined by another setting in this category.", new AcceptableValueRange<float>(0f, 0.99f)));
 			_reaveImmunity = cfg.Bind("3d. Character Special", "Reave Protection", true, "While performing the \"Reave\" special, and if this is true, you will not be able to take damage while locked in the animation.");
-			_baseDeathDamage = cfg.Bind("3d. Character Special", "Base Collapse Damage", 750f, StaticDeclareConfigDescription(string.Format(FMT_DEFAULT, "death collapse damage output") + " NOTE: If you wish to cause an instant kill like normal Reavers, input any value greater than or equal to one million (thats six zeros c:).", new AcceptableMinimum<float>()));
-			
+			_baseDeathDamage = cfg.Bind("3d. Character Special", "Collapse Damage", 750f, StaticDeclareConfigDescription("The amount of damage that the \"Collapse\" special does to enemies within.", new AcceptableMinimum<float>()));
+			_collapseInstakill = cfg.Bind("3d. Character Special", "Collapse Can Instakill", true, "If true, Collapse will instantly kill any enemy that is not immune to void deaths, making it behave identically to that of vanilla Void Reavers.");
+			_collapseInstakillAffectBoss = cfg.Bind("3d. Character Special", "Collapse Instakill Affects Bosses", false, "If Collapse Instakill is enabled, this determines whether or not it can affect bosses. Setting this to false is recommended so that runs aren't completely thrown.");
 
 			_baseDamage = cfg.Bind("4. Character Combat", "Base Damage", 16f, StaticDeclareConfigDescription(string.Format(FMT_DEFAULT, "base damage output") + " Other damage values are multiplied with this.", new AcceptableMinimum<float>()));
 			_levelDamage = cfg.Bind("4. Character Combat", "Leveled Damage", 2.4f, StaticDeclareConfigDescription(string.Format(FMT_LEVELED, "base damage output") + " Other damage values are multiplied with this.", new AcceptableMinimum<float>()));
