@@ -47,6 +47,7 @@ namespace FubukiMods.Modules {
 			voidPrimaryProjectile.useSpeedOverride = false;
 			voidPrimaryProjectile.target = null;
 			voidPrimaryProjectile.projectilePrefab = commonVoidPrimary.Projectile;
+			voidPrimaryProjectile.damageColorIndex = DamageColorIndex.Void;
 			return voidPrimaryProjectile;
 		}
 
@@ -67,6 +68,7 @@ namespace FubukiMods.Modules {
 			deletionProjectile.rotation = Quaternion.identity;
 			deletionProjectile.owner = state.characterBody.gameObject; //Configuration.VoidDeathFriendlyFire ? null : state.characterBody.gameObject;
 			deletionProjectile.damage = state.damageStat * damageMultiplier;
+			deletionProjectile.damageColorIndex = DamageColorIndex.Void;
 
 			if (isDeath && Configuration.IsVoidDeathInstakill) {
 				deletionProjectile.damage = float.MaxValue;
