@@ -1,4 +1,5 @@
 ﻿using R2API;
+using RoR2;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -18,6 +19,7 @@ namespace ROR2VoidReaverModFixed.XanCode.Data {
 		/// The value is 1,000,000.
 		/// </summary>
 		public static float VoidDeletionThreshold { get; } = 1000000f;
+
 
 		public static void Init() {
 			VoidCollapse = ReserveDamageType();

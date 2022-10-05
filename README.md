@@ -33,17 +33,16 @@ Wohaho!
 #### Fixes
 * *Ideally* fixed the issue where Bustling Fungus would not spawn its AoE. The player might float a slight, almost imperceptible height above the ground, but it looks close enough to ordinary Void Reavers that it doesn't really matter.
 * Fixed a bug causing Reave to not do the right amount of self-damage.
+* Fixed a bug causing replication to fail when remote players died (or, this fixes the issue where your friendly reaver players would get "stuck" when dying and not poof away).
 
 #### Mechanical Changes
-* [EXPERIMENTAL] Added the option to override Reave and Collapse such that it damages players. It is off by default, and was mostly introduced because that's how friendly Void creatures work anyway.
-* [EXPERIMENTAL] Added the option to become immune to environmental void damage and fog, for the people who got irked by the fact that the literal void entity was hurt by its native environment (read: me). This should mostly work well, *the primary issue is that it might unintentionally block damage from other valid sources.* It has to guess if something is doing void damage by the distinct lack of a source for the damage, and the specific combo of types for the damage.
+* [EXPERIMENTAL] Added the option to become immune to environmental void damage and fog, for the people who got irked by the fact that the literal void entity was hurt by its native environment (read: me). This should mostly work well, *the primary issue is that it might unintentionally block damage from other valid sources.* It has to guess if the damage is void, so it's not very easy.
 
 #### Art and Lore Changes
 * Added a passive ability slot, and reorganized the description of the survivor and abilities.
 
 #### Configuration Changes
 * Added the ability to configure the speed, regeneration, and duration of Dive.
-* As mentioned above, Reave/Collapse PvP damage can be toggled.
 * As mentioned above, immunity to Void environments can be toggled.
 
 ### 1.1.1

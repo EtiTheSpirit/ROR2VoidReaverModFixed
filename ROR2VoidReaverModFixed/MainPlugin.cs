@@ -9,6 +9,7 @@ using XanVoidReaverEdit;
 using ROR2VoidReaverModFixed.XanCode;
 using ROR2VoidReaverModFixed.XanCode.Data;
 using static R2API.DamageAPI;
+using RoR2;
 
 namespace FubukiMods {
 	[
@@ -26,6 +27,8 @@ namespace FubukiMods {
 			Lang.Init();
 			XanConstants.Init();
 
+			// On.RoR2.Networking.NetworkManagerSystemSteam.OnClientConnect += (s, u, t) => { };
+
 			PrimaryProjectile = PrefabAPI.InstantiateClone(Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarSkillReplacements/LunarNeedleProjectile.prefab").WaitForCompletion(), "VoidPrimaryAttack", true);
 			if (Configuration.UseFullSizeCharacter) {
 				// We ARE using full size character
@@ -38,7 +41,7 @@ namespace FubukiMods {
 			primaryExplosion.explosionEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Nullifier/NullifierBombProjectile.prefab").WaitForCompletion();
 			primaryExplosion.lifetimeAfterImpact = 0.2f;
 			primaryExplosion.blastDamageCoefficient = 1f;
-			primaryDamage.damageColorIndex = RoR2.DamageColorIndex.Void;
+			primaryDamage.damageColorIndex = DamageColorIndex.Void;
 			ContentAddition.AddProjectile(PrimaryProjectile);
 
 			SecondaryProjectile = PrefabAPI.InstantiateClone(Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Nullifier/NullifierPreBombProjectile.prefab").WaitForCompletion(), "VoidSecondaryAttack");
@@ -50,30 +53,34 @@ namespace FubukiMods {
 			secondaryExplosion.lifetime = 0.75f;
 			secondaryExplosion.lifetimeRandomOffset = 0.25f;
 			secondaryController.procCoefficient = 1f;
-			secondaryDamage.damageColorIndex = RoR2.DamageColorIndex.Void;
-			secondaryDamage.damageType = RoR2.DamageType.Nullify; // This causes the Nullify effect.
+			secondaryDamage.damageColorIndex = DamageColorIndex.Void;
+			secondaryDamage.damageType = DamageType.Nullify; // This causes the Nullify effect.
 			ContentAddition.AddProjectile(SecondaryProjectile);
 
 			ReaveProjectile = PrefabAPI.InstantiateClone(Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Nullifier/NullifierDeathBombProjectile.prefab").WaitForCompletion(), "VoidSpecialAttack", true);
 			ProjectileDamage reaveDamage = ReaveProjectile.GetComponent<ProjectileDamage>();
+			ProjectileController reaveController = ReaveProjectile.GetComponent<ProjectileController>();
 			ProjectileExplosion reaveBaseExplosion = ReaveProjectile.GetComponent<ProjectileExplosion>();
 			ProjectileImpactExplosion reaveImpactExplosion = ReaveProjectile.GetComponent<ProjectileImpactExplosion>();
-			reaveBaseExplosion.blastAttackerFiltering = RoR2.AttackerFiltering.NeverHitSelf;
+			ModdedDamageTypeHolderComponent reaveModDamageTypeHolder = ReaveProjectile.AddComponent<ModdedDamageTypeHolderComponent>();
+			reaveController.teamFilter = new TeamFilter {
+				teamIndex = TeamIndex.None // This will allow it to hit everything.
+			};
+			reaveBaseExplosion.blastAttackerFiltering = AttackerFiltering.NeverHitSelf;
 			reaveBaseExplosion.blastDamageCoefficient = 1f;
 			reaveBaseExplosion.blastProcCoefficient = 1f;
 			reaveBaseExplosion.totalDamageMultiplier = 1f;
+			reaveBaseExplosion.falloffModel = BlastAttack.FalloffModel.None;
 			if (Configuration.UseFullSizeCharacter) {
 				// We ARE using full size character
 				reaveBaseExplosion.blastRadius *= 1.25f;
 			}
 			reaveDamage.damage = 1f;
-			reaveDamage.damageColorIndex = RoR2.DamageColorIndex.Void;
-			reaveDamage.damageType = RoR2.DamageType.VoidDeath | RoR2.DamageType.BypassArmor | RoR2.DamageType.BypassBlock | RoR2.DamageType.BypassOneShotProtection;//RoR2.DamageType.LunarSecondaryRootOnHit;
+			reaveDamage.damageColorIndex = DamageColorIndex.Void;
+			reaveDamage.damageType = DamageType.VoidDeath | DamageType.BypassArmor | DamageType.BypassBlock | DamageType.BypassOneShotProtection;//RoR2.DamageType.LunarSecondaryRootOnHit;
 			reaveImpactExplosion.lifetime = Skills.VoidDeath.REAVE_DURATION;
-
-			ModdedDamageTypeHolderComponent damageTypeHolder = ReaveProjectile.AddComponent<ModdedDamageTypeHolderComponent>();
-			damageTypeHolder.Add(XanConstants.VoidCollapse);
-
+			reaveImpactExplosion.falloffModel = BlastAttack.FalloffModel.None;
+			reaveModDamageTypeHolder.Add(XanConstants.VoidCollapse);
 			ContentAddition.AddProjectile(ReaveProjectile);
 
 			Survivors.Init();

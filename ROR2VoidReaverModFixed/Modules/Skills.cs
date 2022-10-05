@@ -4,6 +4,7 @@ using EntityStates.Huntress;
 using EntityStates.Missions.Arena.NullWard;
 using EntityStates.NullifierMonster;
 using HG;
+using R2API;
 using RoR2;
 using RoR2.Projectile;
 using ROR2VoidReaverModFixed.XanCode;
@@ -64,7 +65,7 @@ namespace FubukiMods.Modules {
 			deletionProjectile.projectilePrefab = projectile;
 			deletionProjectile.position = muzzleTransform.position;
 			deletionProjectile.rotation = Quaternion.identity;
-			deletionProjectile.owner = Configuration.VoidDeathFriendlyFire ? null : state.gameObject;
+			deletionProjectile.owner = state.characterBody.gameObject; //Configuration.VoidDeathFriendlyFire ? null : state.characterBody.gameObject;
 			deletionProjectile.damage = state.damageStat * damageMultiplier;
 
 			if (isDeath && Configuration.IsVoidDeathInstakill) {
@@ -370,8 +371,6 @@ namespace FubukiMods.Modules {
 		/// </summary>
 		public class VoidUtility : BaseState {
 
-			private const float EFFECT_DURATION = 1f;
-
 			private float _currentTime;
 
 			private Vector3 _moveVector = Vector3.zero;
@@ -409,7 +408,7 @@ namespace FubukiMods.Modules {
 					_hurtboxGroup.hurtBoxesDeactivatorCounter++;
 				}
 				if (NetworkServer.active) {
-					characterBody.AddTimedBuff(RoR2Content.Buffs.Cloak, EFFECT_DURATION);
+					characterBody.AddTimedBuff(RoR2Content.Buffs.Cloak, Configuration.UtilityDuration);
 					characterBody.healthComponent.HealFraction(Configuration.UtilityRegen, default);
 				}
 				_moveVector = ((inputBank.moveVector == Vector3.zero) ? characterDirection.forward : inputBank.moveVector).normalized;
@@ -421,10 +420,10 @@ namespace FubukiMods.Modules {
 				_currentTime += Time.fixedDeltaTime;
 				if (characterMotor != null && characterDirection != null) {
 					characterMotor.velocity = Vector3.zero;
-					characterMotor.rootMotion += _moveVector * (moveSpeedStat * Configuration.UtilitySpeed * Time.fixedDeltaTime) * Mathf.Sin(_currentTime / EFFECT_DURATION * 2.3561945f); // 135deg
-					characterMotor.rootMotion += new Vector3(0f, _yVelocity * Time.fixedDeltaTime * Mathf.Cos(_currentTime / EFFECT_DURATION * 1.57079637f), 0f);
+					characterMotor.rootMotion += _moveVector * (moveSpeedStat * Configuration.UtilitySpeed * Time.fixedDeltaTime) * Mathf.Sin(_currentTime / Configuration.UtilityDuration * 2.3561945f); // 135deg
+					characterMotor.rootMotion += new Vector3(0f, _yVelocity * Time.fixedDeltaTime * Mathf.Cos(_currentTime / Configuration.UtilityDuration * 1.57079637f), 0f);
 				}
-				bool timeToExit = _currentTime >= EFFECT_DURATION && isAuthority;
+				bool timeToExit = _currentTime >= Configuration.UtilityDuration && isAuthority;
 				if (timeToExit) {
 					outer.SetNextStateToMain();
 				}
@@ -487,11 +486,12 @@ namespace FubukiMods.Modules {
 				_zoomOutParams.cameraParamsData.idealLocalCameraPos = new Vector3(0f, 1f, -30f);
 				_zoomOutParams.cameraParamsData.pivotVerticalOffset = 0f;
 				_zoomOutHandle = GetComponent<CameraTargetParams>().AddParamsOverride(_zoomOutParams, 2f);
+
 				Transform muzzleTransform = FindModelChild(DeathState.muzzleName);
 				PlayCrossfade("Body", "Death", "Death.playbackRate", VoidDeath.REAVE_DURATION, 0.1f);
 				if (isAuthority && muzzleTransform != null) {
 					ProjectileManager.instance.FireProjectile(GetVoidExplosionFireInfo(this, Projectile, muzzleTransform, Configuration.BaseSpecialDamage, false));
-				} else if (muzzleTransform != null) {
+				} else if (muzzleTransform == null) {
 					Log.LogError("WARNING: Failed to execute Reave ability! The character does not have a muzzle transform. Were you deleted or something? You good? Did the furries read \"muzzle\" and steal it for their diabolical activities (if so then lmao also L)?");
 				}
 				if (Configuration.ReaveImmunity) {
@@ -558,7 +558,7 @@ namespace FubukiMods.Modules {
 			/// Press R to drink bleach flavored toaster bath water (gamer girl certified)
 			/// </summary>
 			public override void OnEnter() {
-				characterBody.gameObject.GetComponent<HealthComponent>().Suicide(gameObject, gameObject, DamageType.BypassArmor | DamageType.BypassBlock | DamageType.Silent);
+				characterBody.gameObject.GetComponent<HealthComponent>().Suicide(gameObject, gameObject, DamageType.BypassArmor | DamageType.BypassBlock | DamageType.BypassOneShotProtection | DamageType.Silent);
 			}
 
 		}
@@ -579,8 +579,13 @@ namespace FubukiMods.Modules {
 			private bool _hasDeleted = false;
 
 			public override void OnEnter() {
-				Log.LogMessage("You are dead. Soup rice beeg not.");
+				// base.OnEnter stuff that matters here:
 				isPlayerDeath = characterBody.master != null && characterBody.master.GetComponent<PlayerCharacterMasterController>() != null;
+				damageStat = characterBody.damage;
+				///////////////
+
+				cachedModelTransform = characterBody.gameObject.GetComponent<ModelLocator>().modelTransform;
+				characterBody.rigidbody.isKinematic = true;
 
 				PlayCrossfade("Body", "Death", "Death.playbackRate", REAVE_DURATION, 0.1f);
 
@@ -616,17 +621,9 @@ namespace FubukiMods.Modules {
 			public override void FixedUpdate() {
 				fixedAge += Time.fixedDeltaTime; // Since I do not want to call base
 
-				if (fixedAge >= REAVE_DURATION && !_hasDeleted) {
+				if (fixedAge >= REAVE_DURATION + Time.fixedDeltaTime && !_hasDeleted) {
 					_hasDeleted = true;
-					/*
 					DestroyModel();
-					Destroy(gameObject);
-					*/
-					Transform mdlTrs = characterBody.modelLocator.modelTransform;
-					if (mdlTrs != null) {
-						Destroy(mdlTrs.gameObject);
-						Log.LogMessage("Fake-deleted player character.");
-					}
 				}
 			}
 

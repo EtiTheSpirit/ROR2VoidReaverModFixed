@@ -4,6 +4,7 @@ using R2API;
 using R2API.Utils;
 using RoR2;
 using ROR2VoidReaverModFixed.XanCode;
+using ROR2VoidReaverModFixed.XanCode.Data;
 using ROR2VoidReaverModFixed.XanCode.Image;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -13,8 +14,7 @@ using LunarPrimaryReplacementSkill = On.RoR2.Skills.LunarPrimaryReplacementSkill
 using SerializableEntityStateType = EntityStates.SerializableEntityStateType;
 using SkillDef = RoR2.Skills.SkillDef;
 
-namespace FubukiMods.Modules
-{
+namespace FubukiMods.Modules {
 
 	/// <summary>
 	/// The survivor main module. This was originally written by LuaFubuki but was rewritten and refactored by Xan.
@@ -61,7 +61,7 @@ namespace FubukiMods.Modules
 			ContentAddition.AddEntityState<Skills.VoidDeath>(out _);
 			CharacterDeathBehavior deathBehavior = playerBodyPrefab.GetComponent<CharacterDeathBehavior>();
 			deathBehavior.deathState = new SerializableEntityStateType(typeof(Skills.VoidDeath));
-			
+
 			body.aimOriginTransform.Translate(new Vector3(0f, 0f, 0f));
 			body.bodyColor = new Color(0.867f, 0.468f, 0.776f);
 			body.bodyFlags = CharacterBody.BodyFlags.ImmuneToExecutes | CharacterBody.BodyFlags.Void | CharacterBody.BodyFlags.ImmuneToVoidDeath;
@@ -264,11 +264,48 @@ namespace FubukiMods.Modules
 				On.RoR2.CharacterBody.SetBuffCount += InterceptBuffsEvent;
 				On.RoR2.HealthComponent.TakeDamage += InterceptTakeDamage;
 			}
+
+		//	On.RoR2.HealthComponent.TakeDamage += InterceptTakeDamageGlobally;
 		}
+
+		/*
+		private static void InterceptTakeDamageGlobally(On.RoR2.HealthComponent.orig_TakeDamage orig, HealthComponent @this, DamageInfo damageInfo) {
+			if (Configuration.VoidDeathFriendlyFire) {
+				if (damageInfo.HasModdedDamageType(XanConstants.VoidCollapse)) {
+					Log.LogDebug("Damage is void collapse...");
+					if (damageInfo.attacker != null) {
+						CharacterBody attackerBody = damageInfo.attacker.GetComponent<CharacterBody>();
+						if (attackerBody != null) {
+							Log.LogDebug("Attacker is not nothing...");
+							if (attackerBody != @this.body) {
+								Log.LogDebug("Attacker is not me...");
+								if (attackerBody.baseNameToken == Lang.SURVIVOR_NAME) {
+									Log.LogDebug("Attacker is a reaver. That's everything.");
+									TeamComponent myTeamCmp = @this.body.teamComponent;
+									TeamComponent otherTeamCmp = attackerBody.teamComponent;
+									TeamIndex orgTeam = myTeamCmp.teamIndex;
+									TeamIndex otherTeam = otherTeamCmp.teamIndex;
+#pragma warning disable Publicizer001
+									myTeamCmp._teamIndex = TeamIndex.None;
+									otherTeamCmp._teamIndex = TeamIndex.Neutral;
+									orig(@this, damageInfo);
+									otherTeamCmp._teamIndex = otherTeam;
+									myTeamCmp._teamIndex = orgTeam;
+#pragma warning restore Publicizer001
+									return;
+								}
+							}
+						}
+					}
+				}
+			}
+			orig(@this, damageInfo);
+		}
+		*/
 
 		private static void OnPlayerReaverModelChanged(Transform obj) {
 			Animator animator = obj.GetComponent<Animator>();
-			
+
 			if (animator != null) {
 				Log.LogMessage("Player is using the full size reaver model, the animation speed of their latest spawned model has been reduced to 0.825f to correct a speed error.");
 				animator.speed = 0.825f;
@@ -280,10 +317,11 @@ namespace FubukiMods.Modules
 		private static void InterceptTakeDamage(On.RoR2.HealthComponent.orig_TakeDamage orig, HealthComponent @this, DamageInfo dmg) {
 			if (@this.body != null && @this.body.baseNameToken == Lang.SURVIVOR_NAME) {
 				if (dmg.attacker == null && dmg.inflictor == null && dmg.damageType == (DamageType.BypassBlock | DamageType.BypassArmor)) {
-					Log.LogDebug("Aborting what I believe to be Void atmosphere damage (no source, no inflictor, type bypasses blocks and armor only).");
-					return;
+					// Log.LogDebug("Aborting what I believe to be Void atmosphere damage (no source, no inflictor, type bypasses blocks and armor only).");
+					dmg.rejected = true;
 				}
 			}
+
 			orig(@this, dmg);
 		}
 
@@ -297,7 +335,7 @@ namespace FubukiMods.Modules
 					return;
 				}
 			}
-			
+
 			orig(@this, buffType, newCount);
 		}
 

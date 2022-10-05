@@ -150,6 +150,12 @@ namespace ROR2VoidReaverModFixed.XanCode {
 		/// </summary>
 		public static float BaseSpecialDamage => _baseSpecialDamage.Value;
 
+		/// <summary>
+		/// Whether or not Reave/Collapse deals damage to friendly players even when artifact of Chaos is disabled.
+		/// </summary>
+		[Obsolete("This does not yet function properly.")]
+		public static bool VoidDeathFriendlyFire => false;//_collapseFriendlyFire.Value;
+
 		#region Reave
 
 		/// <summary>
@@ -178,11 +184,8 @@ namespace ROR2VoidReaverModFixed.XanCode {
 		/// </summary>
 		public static bool IsVoidDeathInstakill => BaseDeathDamage >= XanConstants.VoidDeletionThreshold;
 
-		/// <summary>
-		/// Whether or not Reave/Collapse deals damage to friendly players.
-		/// </summary>
-		public static bool VoidDeathFriendlyFire => _collapseFriendlyFire.Value;
 		#endregion
+
 		#endregion
 
 		#region Misc.
@@ -391,7 +394,7 @@ namespace ROR2VoidReaverModFixed.XanCode {
 			_reaveHealthCostPercent = cfg.Bind("5. Void Reaver Specifics", "Reave Cost", 0.5f, StaticDeclareConfigDescription("This is the health cost required to perform the \"Reave\" special. The actual manner in which this is used is determined by another setting in this category.", new AcceptableValueRange<float>(0f, 0.99f)));
 			// _useLegacyLunarBase = cfg.Bind("5. Void Reaver Specifics", "Use Legacy Lunar Mechanics", false, "If enabled, legacy abilities from when Lunar mechanics were used for the Primary and Utility slots will be implemented instead of their modern replacements.");
 			_useFullSizeCharacter = cfg.Bind("5. Void Reaver Specifics", "(EXPERIMENTAL) Use Full Size Reaver", false, "By default, the mod sets the Reaver's scale to 50% that of its natural size. Turning this on will make you the same size as a normal Reaver. **EXPERIMENTAL WARNING** This setting has not been tested very much and there will be problems with world collisions (you might not be able to traverse the whole world), attacks and interactions, and more. This setting mostly exists for giggles.");
-			_collapseFriendlyFire = cfg.Bind("5. Void Reaver Specifics", "(EXPERIMENTAL) Collapse Harms Players", false, "If enabled, any form of a void collapse (Reave, Collapse/Death) can deal damage to and/or kill friendly players. This mimics the behavior of the Newly Hatched Zoea, where friendly void enemies will still kill players caught in their death implosion. **EXPERIMENTAL WARNING** This may be inconsistent when using Reave.");
+			// _collapseFriendlyFire = cfg.Bind("5. Void Reaver Specifics", "(EXPERIMENTAL) Collapse Harms Players", false, "If enabled, any form of a void collapse (Reave, Collapse/Death) can deal damage to and/or kill friendly players. This mimics the behavior of the Newly Hatched Zoea, where friendly void enemies will still kill players caught in their death implosion. **EXPERIMENTAL WARNING** This may be inconsistent when using Reave.");
 			_voidImmunity = cfg.Bind("5. Void Reaver Specifics", "Void Immunity", true, "If enabled, the player will be immune to damage from a void atmosphere and will not have the fog effect applied to them. **EXPERIMENTAL WARNING** There isn't actually a way to tell if you are taking damage from the void. The way I do it is an educated guess. This means you may actually resist completely valid damage types from some enemies, but I have yet to properly test this.");
 
 			_useNewIcons = cfg.Bind("6. Other Options", "Use New Icons", true, "If true, this abandons the old pixel art icons created by LuaFubuki, and replaces them with renders that I made.");

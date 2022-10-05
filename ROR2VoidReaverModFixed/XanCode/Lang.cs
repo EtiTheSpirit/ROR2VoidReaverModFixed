@@ -60,11 +60,12 @@ namespace ROR2VoidReaverModFixed.XanCode {
 
 		/// <summary>
 		/// Ronds a floating point value to the nearest tenths place, returning it as a string.
+		/// If the value is a whole number, it returns that number verbatim.
 		/// </summary>
 		/// <param name="value"></param>
 		/// <returns></returns>
 		// also lmao
-		private static string RoundTen(float value) => value == 1 ? "1" : (Mathf.Round(value * 10) / 10).ToString("0.0");
+		private static string RoundTen(float value) => value == Mathf.Floor(value) ? value.ToString() : (Mathf.Round(value * 10) / 10).ToString("0.0");
 
 		/// <summary>
 		/// Lazily "pluralize" a word by adding "s" to the end if the input value is not exactly 1.
