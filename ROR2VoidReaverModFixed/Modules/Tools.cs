@@ -157,7 +157,7 @@ namespace FubukiMods.Modules {
 			SkillFamily family = target.skillFamily;
 			SkillFamily.Variant[] variants = family.variants;
 			if (variants.Length >= variantIndex) {
-				Log.LogMessage("Expanding Skill Family Variants array...");
+				Log.LogTrace("Expanding Skill Family Variants array...");
 				System.Array.Resize(ref variants, variantIndex + 1);
 			}
 			SkillFamily.Variant newVariant = default;
@@ -165,7 +165,7 @@ namespace FubukiMods.Modules {
 			newVariant.viewableNode = new ViewablesCatalog.Node(definition.skillName + "_VIEW", false, null);
 			variants[variantIndex] = newVariant;
 			family.variants = variants;
-			Log.LogMessage($"Appended new skill in slot \"{slotName}\": {definition.skillNameToken}");
+			Log.LogTrace($"Appended new skill in slot \"{slotName}\": {definition.skillNameToken}");
 		}
 
 		/// <summary>

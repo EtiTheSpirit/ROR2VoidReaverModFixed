@@ -1,5 +1,5 @@
 # Void Reaver Player Character
-An expansion upon [LuaFubuki's Void Reaver Mod](https://thunderstore.io/package/LuaFubuki/Void_Reaver/) that integrates my extensions' features as standard abilities. This also fixes a number of bugs, introduces survivor lore, and introduces more configuration options.
+An expansion upon [LuaFubuki's Void Reaver Mod](https://thunderstore.io/package/LuaFubuki/Void_Reaver/) that features my personal improvements, bugfixes, and more!
 
 ## Features
 * All abilities of LuaFubuki's original Void Reaver mod
@@ -17,7 +17,6 @@ An expansion upon [LuaFubuki's Void Reaver Mod](https://thunderstore.io/package/
 * If you are just starting out, there's lots of configs that are sorted as cleanly as they can be. If you dislike something mechanically, you can probably just change it yourself.
 
 ## Known Bugs
-* Using the Full Size option causes the walk and run animations to play too quickly, despite attempts to fix this.
 * No other bugs are currently known.
 
 ## Special Thanks To...
@@ -27,10 +26,44 @@ An expansion upon [LuaFubuki's Void Reaver Mod](https://thunderstore.io/package/
 
 # Changelogs
 
+## 2.0.3
+#### If this fix gets any hotter, I might not be able to contain myself!
+
+### Fixes
+* Fixed a regression reintroduced by 2.0.2 where the ragdoll of dead reaver players got stuck after finishing the death animation.
+
+## 2.0.2
+#### Hotfix for some bugs in 2.0.1
+
+### Fixes
+* Fixed a bug causing Reave to do instakill damage (only Collapse should do this)
+* Fixed a bug where the player was not properly disposed of after death, causing enemies to continue to attack an empty space, and breaking the spectator camera.
+
+## 2.0.1
+#### Some stragglers I wanted to release after playtesting some more.
+
+### The Spotlight
+* Added a new option to replace a previous mechanic for Collapse instakill.
+  * Collapse damage should no longer be set to 1 million or above to make it instakill.
+  * There is now a dedicated config option to enable (or disable) Collapse's instakill.
+  * To prevent balance issues, there is an additional config option to prevent Collapse from instakilling bosses, falling back to the damage stat.
+
+### Fixes
+* Corrected the mod manifest missing its dependency on HookGenPatcher
+* Fixed a bug preventing the animation speed from being corrected when using the full size option.
+* Fixed a bug where using Collapse would not set shield and barrier to 0, sometimes giving the illusion of some health still remaining.
+
+### Mechanical Changes
+* Slightly buffed the default base damage from 16 => 20
+* Buffed health from 200 => 220
+
+### Art Changes
+* The shield bar and overlay are both always rendered in the Void style on the Reaver player, regardless of whether or not the player has a Plasma Shrimp.
+
 ## 2.0.0
 #### A major update! What could I put here, in the update's subtitle? What is something that is memorable and unique?
 
-### The Flagship Upgrades
+### The Spotlight
 * **Added new icons** for the character and all of its abilities. For the purists to the classic mod out there, this is an option, and you can use your configuration to make it use the old icons. This will be supported for the rest of the foreseeable future.
 * **Configs were reorganized. DOUBLE CHECK YOUR CONFIG FILES!**
 * **Added skins** for the character!
@@ -42,7 +75,7 @@ An expansion upon [LuaFubuki's Void Reaver Mod](https://thunderstore.io/package/
 * *Ideally* fixed the issue where Bustling Fungus would not spawn its AoE. The player might float a slight, almost imperceptible height above the ground, but it looks close enough to ordinary Void Reavers that it doesn't really matter.
 * Fixed bugs relating to the Full Size option and placement of the player.
 * Fixed a bug causing Reave to not do the right amount of self-damage.
-* Fixed a bug preventing proper replication of the Void Reaver's death state, players to T-pose after dying on remote players' screens.
+* Fixed a bug preventing proper replication of the Void Reaver's death state, causing players to T-pose after dying on remote players' screens.
 
 ### Mechanical Changes
 * [EXPERIMENTAL] Added the option to become immune to environmental void damage and fog. This setting works very well, and is **enabled** by default for new users especially. *The primary issue is that it might unintentionally block damage from other valid sources.* This is because it has to guess if something is void damage.

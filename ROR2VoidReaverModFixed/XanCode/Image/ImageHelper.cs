@@ -6,7 +6,7 @@ using UnityEngine;
 using XanVoidReaverEdit;
 
 namespace ROR2VoidReaverModFixed.XanCode.Image {
-	public class ImageHelper {
+	public static class ImageHelper {
 
 		public static Texture2D CreateTexture(Stream fileIn) {
 			Texture2D tex = new Texture2D(1, 1);

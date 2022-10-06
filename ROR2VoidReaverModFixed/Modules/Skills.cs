@@ -8,6 +8,7 @@ using R2API;
 using RoR2;
 using RoR2.Projectile;
 using ROR2VoidReaverModFixed.XanCode;
+using ROR2VoidReaverModFixed.XanCode.Data;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -111,7 +112,7 @@ namespace FubukiMods.Modules {
 		public class VoidPrimarySequenceShot : CommonVoidPrimary {
 
 			private const float RECOIL = 0f;
-			
+
 			/// <summary>
 			/// Keeps track of the current bullet being fired.
 			/// </summary>
@@ -486,7 +487,7 @@ namespace FubukiMods.Modules {
 				_zoomOutHandle = GetComponent<CameraTargetParams>().AddParamsOverride(_zoomOutParams, 2f);
 
 				Transform muzzleTransform = FindModelChild(DeathState.muzzleName);
-				PlayCrossfade("Body", "Death", "Death.playbackRate", VoidDeath.REAVE_DURATION, 0.1f);
+				PlayCrossfade("Body", "Death", "Death.playbackRate", XanConstants.REAVER_DEATH_DURATION, 0.1f);
 				if (isAuthority && muzzleTransform != null) {
 					ProjectileManager.instance.FireProjectile(GetVoidExplosionFireInfo(this, Projectile, muzzleTransform, Configuration.BaseSpecialDamage));
 				} else if (muzzleTransform == null) {
@@ -499,7 +500,7 @@ namespace FubukiMods.Modules {
 			}
 
 			public override void FixedUpdate() {
-				bool isEndOfEffect = fixedAge >= VoidDeath.REAVE_DURATION;
+				bool isEndOfEffect = fixedAge >= XanConstants.REAVER_DEATH_DURATION;
 				if (isEndOfEffect) {
 					if (!_hasCreatedVoidPortalEffect) {
 						_hasCreatedVoidPortalEffect = true;
@@ -556,7 +557,14 @@ namespace FubukiMods.Modules {
 			/// Press R to drink bleach flavored toaster bath water (gamer girl certified)
 			/// </summary>
 			public override void OnEnter() {
-				characterBody.gameObject.GetComponent<HealthComponent>().Suicide(gameObject, gameObject, DamageType.BypassArmor | DamageType.BypassBlock | DamageType.BypassOneShotProtection | DamageType.Silent);
+
+				HealthComponent healthCmp = characterBody.gameObject.GetComponent<HealthComponent>();
+				healthCmp.health = 0;
+				healthCmp.shield = 0;
+				healthCmp.barrier = 0;
+				if (NetworkServer.active) {
+					healthCmp.Suicide(gameObject, gameObject, DamageType.BypassArmor | DamageType.BypassBlock | DamageType.BypassOneShotProtection | DamageType.Silent);
+				}
 			}
 
 		}
@@ -565,34 +573,35 @@ namespace FubukiMods.Modules {
 
 		/// <summary>
 		/// Designed by LuaFubuki, modified by Xan.<br/>
-		/// The original function only created the portal. The edit now causes the death explosion as well.
+		/// The original function only created the portal. The edit now causes the death explosion as well.<br/>
+		/// It is important to note that this does <strong>not</strong> inherit <see cref="GenericCharacterDeath"/> as this
+		/// is a specialized death that deviates from the standard rules and timing of the ordinary death sequence.
 		/// </summary>
-		public class VoidDeath : GenericCharacterDeath {
+		public class VoidDeath : BaseState {
 
-			/// <summary>
-			/// The duration that the effect lasts for. This is something the game itself defines.
-			/// </summary>
-			public const float REAVE_DURATION = 2.5f;
-
+			private bool _isPlayerDeath;
+			private Transform _cachedModelTransform;
 			private bool _hasDeleted = false;
 
 			public override void OnEnter() {
-				// base.OnEnter stuff that matters here:
-				isPlayerDeath = characterBody.master != null && characterBody.master.GetComponent<PlayerCharacterMasterController>() != null;
 				damageStat = characterBody.damage;
-				///////////////
+				_isPlayerDeath = characterBody.master != null && characterBody.master.GetComponent<PlayerCharacterMasterController>() != null;
+				_cachedModelTransform = characterBody.gameObject.GetComponent<ModelLocator>().modelTransform;
 
-				cachedModelTransform = characterBody.gameObject.GetComponent<ModelLocator>().modelTransform;
-				characterBody.rigidbody.isKinematic = true;
+				if (!rigidbody.isKinematic) {
+					rigidbody.velocity = Vector3.zero;
+					if (rigidbodyMotor != null) {
+						rigidbodyMotor.moveVector = Vector3.zero;
+					}
+				}
 
-				PlayCrossfade("Body", "Death", "Death.playbackRate", REAVE_DURATION, 0.1f);
-
+				PlayCrossfade("Body", "Death", "Death.playbackRate", XanConstants.REAVER_DEATH_DURATION, 0.1f);
 				if (isAuthority) {
 					Transform muzzleTransform = FindModelChild(DeathState.muzzleName).Or(gameObject.transform);
 					if (muzzleTransform != null) {
 						ProjectileManager.instance.FireProjectile(GetVoidExplosionFireInfo(
 							this,
-							MainPlugin.ReaveProjectile,
+							MainPlugin.InstakillReaveProjectile,
 							muzzleTransform,
 							Configuration.BaseDeathDamage
 						));
@@ -600,33 +609,48 @@ namespace FubukiMods.Modules {
 						Log.LogError("WARNING: Failed to execute death explosion! The character does not have a muzzle transform. Were you deleted or something? You good? Did the furries read \"muzzle\" and steal it for their diabolical activities (if so then lmao also L)?");
 					}
 
-					EffectManager.SpawnEffect(voidDeathEffect, new EffectData {
+					EffectManager.SpawnEffect(GenericCharacterDeath.voidDeathEffect, new EffectData {
 						origin = characterBody.corePosition,
 						scale = characterBody.bestFitRadius
 					}, true);
 				}
 
-				if (isPlayerDeath && characterBody != null) {
+				if (_isPlayerDeath && characterBody != null) {
 					Object.Instantiate(
-						LegacyResourcesAPI.Load<GameObject>("Prefabs/TemporaryVisualEffects/PlayerDeathEffect"), 
-						characterBody.corePosition, 
+						LegacyResourcesAPI.Load<GameObject>("Prefabs/TemporaryVisualEffects/PlayerDeathEffect"),
+						characterBody.corePosition,
 						Quaternion.identity
 					).GetComponent<LocalCameraEffect>().targetCharacter = characterBody.gameObject;
 				}
 			}
 
 			public override void FixedUpdate() {
-				fixedAge += Time.fixedDeltaTime; // Since I do not want to call base
+				fixedAge += Time.fixedDeltaTime;
 
-				if (fixedAge >= REAVE_DURATION + Time.fixedDeltaTime && !_hasDeleted) {
+				if (fixedAge >= XanConstants.REAVER_DEATH_DURATION + Time.fixedDeltaTime && !_hasDeleted) {
 					_hasDeleted = true;
-					DestroyModel();
+					DeleteReplicatedModel();
 				}
 			}
 
-			public override void OnExit() {
-				base.OnExit();
+			public override void OnExit() { }
+
+#pragma warning disable Publicizer001
+#pragma warning disable IDE0031 // Simplify null check with a?.b(); (this does not (necessarily) work on unity objects)
+			protected void DeleteReplicatedModel() {
+				if (_cachedModelTransform != null) {
+					_cachedModelTransform.gameObject.Destroy();
+				}
+				if (NetworkServer.active) {
+					if (gameObject) {
+						gameObject.Destroy(GenericCharacterDeath.minTimeToKeepBodyForNetworkMessages);
+					}
+				}
 			}
+#pragma warning restore IDE0031
+#pragma warning restore Publicizer001
+
+			public override InterruptPriority GetMinimumInterruptPriority() => InterruptPriority.Death;
 		}
 
 		#region Lunar Alternates

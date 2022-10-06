@@ -8,8 +8,8 @@ using FubukiMods.Modules;
 using XanVoidReaverEdit;
 using ROR2VoidReaverModFixed.XanCode;
 using ROR2VoidReaverModFixed.XanCode.Data;
-using static R2API.DamageAPI;
 using RoR2;
+using ROR2VoidReaverModFixed.XanCode.ILPatches;
 
 namespace FubukiMods {
 	[
@@ -17,15 +17,18 @@ namespace FubukiMods {
 		R2APISubmoduleDependency(nameof(PrefabAPI), nameof(LoadoutAPI), nameof(LanguageAPI), nameof(DamageAPI)),
 		NetworkCompatibility
 	]
-	[BepInPlugin("com.Fubuki.VoidReaver.XansEdit", "Void Reaver Survivor (Xan's Edit)", "2.0.0")]
+	[BepInPlugin("com.Fubuki.VoidReaver.XansEdit", "Void Reaver Survivor (Xan's Edit)", "2.0.3")]
 	public class MainPlugin : BaseUnityPlugin {
 
+#pragma warning disable Publicizer001
 		void Awake() {
 			Log.Init(Logger);
-			Log.LogMessage("Initializing Void Reaver Mod Edit");
+			Log.LogMessage("Xan's Void Reaver Mod has started its intiialization cycle.");
 			Configuration.Init(Config);
-			Lang.Init();
 			XanConstants.Init();
+			Lang.Init();
+			VoidShieldColorizer.Init();
+
 
 			// On.RoR2.Networking.NetworkManagerSystemSteam.OnClientConnect += (s, u, t) => { };
 
@@ -33,6 +36,7 @@ namespace FubukiMods {
 			if (Configuration.UseFullSizeCharacter) {
 				// We ARE using full size character
 				PrimaryProjectile.transform.localScale *= 2f;
+				Log.LogTrace("Upscaling primary projectile by 2x due to using full size player model...");
 			}
 			ProjectileController primaryController = PrimaryProjectile.GetComponent<ProjectileController>();
 			ProjectileImpactExplosion primaryExplosion = PrimaryProjectile.GetComponent<ProjectileImpactExplosion>();
@@ -43,6 +47,7 @@ namespace FubukiMods {
 			primaryExplosion.blastDamageCoefficient = 1f;
 			primaryDamage.damageColorIndex = DamageColorIndex.Void;
 			ContentAddition.AddProjectile(PrimaryProjectile);
+			Log.LogTrace("Registered primary projectile (\"Void Pearls\")");
 
 			SecondaryProjectile = PrefabAPI.InstantiateClone(Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Nullifier/NullifierPreBombProjectile.prefab").WaitForCompletion(), "VoidSecondaryAttack");
 			ProjectileController secondaryController = SecondaryProjectile.GetComponent<ProjectileController>();
@@ -56,13 +61,13 @@ namespace FubukiMods {
 			secondaryDamage.damageColorIndex = DamageColorIndex.Void;
 			secondaryDamage.damageType = DamageType.Nullify; // This causes the Nullify effect.
 			ContentAddition.AddProjectile(SecondaryProjectile);
+			Log.LogTrace("Registered secondary projectile");
 
 			ReaveProjectile = PrefabAPI.InstantiateClone(Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Nullifier/NullifierDeathBombProjectile.prefab").WaitForCompletion(), "VoidSpecialAttack", true);
 			ProjectileDamage reaveDamage = ReaveProjectile.GetComponent<ProjectileDamage>();
 			ProjectileController reaveController = ReaveProjectile.GetComponent<ProjectileController>();
 			ProjectileExplosion reaveBaseExplosion = ReaveProjectile.GetComponent<ProjectileExplosion>();
 			ProjectileImpactExplosion reaveImpactExplosion = ReaveProjectile.GetComponent<ProjectileImpactExplosion>();
-			ModdedDamageTypeHolderComponent reaveModDamageTypeHolder = ReaveProjectile.AddComponent<ModdedDamageTypeHolderComponent>();
 			reaveController.teamFilter = new TeamFilter {
 				teamIndex = TeamIndex.None // This will allow it to hit everything.
 			};
@@ -78,13 +83,20 @@ namespace FubukiMods {
 			reaveDamage.damage = 1f;
 			reaveDamage.damageColorIndex = DamageColorIndex.Void;
 			reaveDamage.damageType = DamageType.VoidDeath | DamageType.BypassArmor | DamageType.BypassBlock | DamageType.BypassOneShotProtection;//RoR2.DamageType.LunarSecondaryRootOnHit;
-			reaveImpactExplosion.lifetime = Skills.VoidDeath.REAVE_DURATION;
+			reaveImpactExplosion.lifetime = XanConstants.REAVER_DEATH_DURATION;
 			reaveImpactExplosion.falloffModel = BlastAttack.FalloffModel.None;
-			reaveModDamageTypeHolder.Add(XanConstants.VoidCollapse);
 			ContentAddition.AddProjectile(ReaveProjectile);
+			Log.LogTrace("Registered black hole death projectile and custom its damage type.");
+
+			InstakillReaveProjectile = PrefabAPI.InstantiateClone(ReaveProjectile, "VoidSpecialAttackInstakill", true);
+			DamageAPI.ModdedDamageTypeHolderComponent reaveModDamageTypeHolder = InstakillReaveProjectile.AddComponent<DamageAPI.ModdedDamageTypeHolderComponent>();
+			reaveModDamageTypeHolder.Add(XanConstants.VoidCollapse);
+			ContentAddition.AddProjectile(InstakillReaveProjectile);
+			Log.LogTrace("Registered black hole death projectile and custom its damage type, except this time its the one that really hurts.");
 
 			Survivors.Init();
 		}
+#pragma warning restore Publicizer001
 
 		/// <summary>
 		/// The custom primary attack for the reaver
@@ -100,6 +112,11 @@ namespace FubukiMods {
 		/// A projectile that spawns the reaver death effect.
 		/// </summary>
 		public static GameObject ReaveProjectile { get; private set; }
+
+		/// <summary>
+		/// A projectile that spawns the reaver death effect, except this one hurts really bad.
+		/// </summary>
+		public static GameObject InstakillReaveProjectile { get; private set; }
 
 	}
 }

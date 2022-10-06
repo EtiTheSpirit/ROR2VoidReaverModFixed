@@ -45,5 +45,12 @@ namespace ROR2VoidReaverModFixed.XanCode {
 		/// <returns></returns>
 		public static T[] NewEmpty<T>() => new T[0];
 
+		/// <summary>
+		/// An alias to <see cref="Object.Destroy(Object, float)"/> that can be called on an object. It also is okay with being called on a transform.
+		/// </summary>
+		/// <param name="obj"></param>
+		/// <param name="afterSeconds"></param>
+		public static void Destroy(this Object obj, float afterSeconds = 0f) => Object.Destroy(obj is Transform trs ? trs.gameObject : obj, afterSeconds);
+
 	}
 }

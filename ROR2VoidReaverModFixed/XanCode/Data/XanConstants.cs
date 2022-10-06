@@ -3,6 +3,7 @@ using RoR2;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using XanVoidReaverEdit;
 using static R2API.DamageAPI;
 
 namespace ROR2VoidReaverModFixed.XanCode.Data {
@@ -14,15 +15,14 @@ namespace ROR2VoidReaverModFixed.XanCode.Data {
 		public static ModdedDamageType VoidCollapse { get; private set; }
 
 		/// <summary>
-		/// The settings indicate to the user that setting the damage boost to a value greater than or equal to this number will
-		/// override the void death effect to work just like normal void enemies, instakilling anything in range.<para/>
-		/// The value is 1,000,000.
+		/// The duration that the void reaver death effect lasts for. This is something the game itself defines.
 		/// </summary>
-		public static float VoidDeletionThreshold { get; } = 1000000f;
-
+		public const float REAVER_DEATH_DURATION = 2.5f;
 
 		public static void Init() {
 			VoidCollapse = ReserveDamageType();
+			Log.LogTrace("Void Collapse damage type registered.");
+			Log.LogInfo("Constants initialized.");
 		}
 
 	}

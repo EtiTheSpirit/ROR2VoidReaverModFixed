@@ -9,8 +9,6 @@ using ROR2VoidReaverModFixed.XanCode.Image;
 using UnityEngine;
 using UnityEngine.Networking;
 using XanVoidReaverEdit;
-using GhostUtilitySkillState = On.EntityStates.GhostUtilitySkillState;
-using LunarPrimaryReplacementSkill = On.RoR2.Skills.LunarPrimaryReplacementSkill;
 using SerializableEntityStateType = EntityStates.SerializableEntityStateType;
 using SkillDef = RoR2.Skills.SkillDef;
 
@@ -29,10 +27,11 @@ namespace FubukiMods.Modules {
 			Interactor interactor = playerBodyPrefab.GetComponent<Interactor>();
 
 			if (Configuration.UseFullSizeCharacter) {
+				Log.LogTrace("Using full size character model. Increasing interaction distance and adding hook to reduce animation speed...");
 				interactor.maxInteractionDistance = 11f;
-				ModelLocator locator = playerBodyPrefab.GetComponent<ModelLocator>();
-				locator.onModelChanged += OnPlayerReaverModelChanged;
+				On.RoR2.ModelLocator.Awake += OnModelLocatorAwakened;
 			} else {
+				Log.LogTrace("Using small character model. Decreasing interaction distance, scaling down model and colliders...");
 				// We ARE NOT using full size character. Downscale.
 				GameObject baseTransform = playerBodyPrefab.GetComponent<ModelLocator>().modelBaseTransform.gameObject;
 				baseTransform.transform.localScale = Vector3.one * 0.5f;
@@ -58,6 +57,7 @@ namespace FubukiMods.Modules {
 			}
 			playerBodyPrefab.GetComponent<SetStateOnHurt>().canBeHitStunned = false;
 
+			Log.LogTrace("Registering death state to network...");
 			ContentAddition.AddEntityState<Skills.VoidDeath>(out _);
 			CharacterDeathBehavior deathBehavior = playerBodyPrefab.GetComponent<CharacterDeathBehavior>();
 			deathBehavior.deathState = new SerializableEntityStateType(typeof(Skills.VoidDeath));
@@ -87,6 +87,7 @@ namespace FubukiMods.Modules {
 			body.baseNameToken = Lang.SURVIVOR_NAME;
 			body.portraitIcon = CommonImages.Portrait.texture;
 			ContentAddition.AddBody(playerBodyPrefab);
+			Log.LogTrace("Finished setting up base stats and registering the body...");
 
 			// Passive stuff:
 			SkillLocator skillLoc = playerBodyPrefab.GetComponent<SkillLocator>();
@@ -96,6 +97,7 @@ namespace FubukiMods.Modules {
 			skillLoc.passiveSkill.skillNameToken = Lang.PASSIVE_NAME;
 			skillLoc.passiveSkill.skillDescriptionToken = Lang.PASSIVE_DESC;
 			skillLoc.passiveSkill.icon = CommonImages.Passive;
+			Log.LogTrace("Finished registering passive details...");
 
 			// Primary, triple shot:
 			ContentAddition.AddEntityState<Skills.VoidPrimarySequenceShot>(out _);
@@ -120,6 +122,7 @@ namespace FubukiMods.Modules {
 			primaryTriple.skillDescriptionToken = Lang.SKILL_PRIMARY_TRIPLESHOT_DESC;
 			primaryTriple.icon = CommonImages.PrimaryTripleShotIcon;
 			Tools.AddSkill(playerBodyPrefab, primaryTriple, "primary", 0);
+			Log.LogTrace("Finished registering Void Impulse...");
 
 			// Primary, spread shot:
 			ContentAddition.AddEntityState<Skills.VoidPrimaryFiveSpread>(out _);
@@ -144,6 +147,7 @@ namespace FubukiMods.Modules {
 			primarySpread.skillDescriptionToken = Lang.SKILL_PRIMARY_SPREAD_DESC;
 			primarySpread.icon = CommonImages.PrimarySpreadShotIcon;
 			Tools.AddSkill(playerBodyPrefab, primarySpread, "primary", 1);
+			Log.LogTrace("Finished registering Void Spread...");
 
 			// Secondary
 			ContentAddition.AddEntityState<Skills.VoidSecondary>(out _);
@@ -168,6 +172,7 @@ namespace FubukiMods.Modules {
 			secondary.skillDescriptionToken = Lang.SKILL_SECONDARY_DESC;
 			secondary.icon = CommonImages.SecondaryIcon;
 			Tools.AddSkill(playerBodyPrefab, secondary, "secondary", 0);
+			Log.LogTrace("Finished registering Undertow...");
 
 			// Utility
 			ContentAddition.AddEntityState<Skills.VoidUtility>(out _);
@@ -192,6 +197,7 @@ namespace FubukiMods.Modules {
 			utility.skillDescriptionToken = Lang.SKILL_UTILITY_DESC;
 			utility.icon = CommonImages.UtilityIcon;
 			Tools.AddSkill(playerBodyPrefab, utility, "utility", 0);
+			Log.LogTrace("Finished registering Dive...");
 
 			ContentAddition.AddEntityState<Skills.VoidSpecialOnDemand>(out _);
 			SkillDef specialWeak = ScriptableObject.CreateInstance<SkillDef>();
@@ -215,6 +221,7 @@ namespace FubukiMods.Modules {
 			specialWeak.skillDescriptionToken = Lang.SKILL_SPECIAL_WEAK_DESC;
 			specialWeak.icon = CommonImages.SpecialWeakIcon;
 			Tools.AddSkill(playerBodyPrefab, specialWeak, "special", 0);
+			Log.LogTrace("Finished registering Reave...");
 
 			ContentAddition.AddEntityState<Skills.VoidSpecialSuicide>(out _);
 			SkillDef specialSuicide = ScriptableObject.CreateInstance<SkillDef>();
@@ -238,8 +245,10 @@ namespace FubukiMods.Modules {
 			specialSuicide.skillDescriptionToken = Lang.SKILL_SPECIAL_SUICIDE_DESC;
 			specialSuicide.icon = CommonImages.SpecialSuicideIcon;
 			Tools.AddSkill(playerBodyPrefab, specialSuicide, "special", 1);
+			Log.LogTrace("Finished registering Collapse...");
 
 			Tools.AddReaverSkins(playerBodyPrefab);
+			Log.LogTrace("Finished registering skins...");
 
 			SurvivorDef survivorDef = ScriptableObject.CreateInstance<SurvivorDef>();
 			survivorDef.bodyPrefab = playerBodyPrefab;
@@ -251,64 +260,92 @@ namespace FubukiMods.Modules {
 			survivorDef.primaryColor = new Color(0.5f, 0.5f, 0.5f);
 			survivorDef.desiredSortPosition = 44.44f;
 			ContentAddition.AddSurvivorDef(survivorDef);
+			Log.LogTrace("Finished registering survivor...");
 
 			Tools.FinalizeBody(playerBodyPrefab.GetComponent<SkillLocator>());
 
+			/*
 			if (Configuration.UseLegacyLunarMechanics) {
 				GhostUtilitySkillState.OnEnter += OverrideLunarGhostStateDuration;
 				LunarPrimaryReplacementSkill.GetRechargeInterval += OverrideLunarPrimaryRechargeInterval;
 				LunarPrimaryReplacementSkill.GetMaxStock += OverrideLunarPrimaryMaxStock;
 				LunarPrimaryReplacementSkill.GetRechargeStock += OverrideLunarPrimaryRechargeStock;
 			}
+			*/
 			if (Configuration.VoidImmunity) {
+				Log.LogTrace("Void immunity is enabled. Registering callbacks.");
 				On.RoR2.CharacterBody.SetBuffCount += InterceptBuffsEvent;
-				On.RoR2.HealthComponent.TakeDamage += InterceptTakeDamage;
+				On.RoR2.HealthComponent.TakeDamage += InterceptTakeDamageForVoidResist;
+			}
+			if (Configuration.IsVoidDeathInstakill) {
+				Log.LogTrace("Void death instakill is enabled. Registering callback.");
+				On.RoR2.HealthComponent.TakeDamage += InterceptTakeDamageForInstakill;
+			}
+		}
+
+		private static void OnModelLocatorAwakened(On.RoR2.ModelLocator.orig_Awake orig, ModelLocator @this) {
+			orig(@this);
+
+			CharacterBody body = @this.GetComponent<CharacterBody>();
+			if (body != null) {
+				if (body.baseNameToken == Lang.SURVIVOR_NAME) {
+					Log.LogTrace("A body spawned that is a player reaver.");
+					Animator animator = @this.modelTransform.GetComponent<Animator>();
+					if (animator != null) {
+						Log.LogTrace("Player is using the full size reaver model, the animation speed of their latest spawned model has been reduced to 0.825f to correct a speed error.");
+						animator.speed = 0.825f;
+					} else {
+						Log.LogTrace("Player changed models, but no animator was present?");
+					}
+				}
+			}
+		}
+
+		private static void InterceptTakeDamageForInstakill(On.RoR2.HealthComponent.orig_TakeDamage orig, HealthComponent @this, DamageInfo damageInfo) {
+			if (damageInfo.rejected) {
+				orig(@this, damageInfo);
+				return;
 			}
 
-			On.RoR2.HealthComponent.TakeDamage += InterceptTakeDamageGlobally;
-		}
-		private static void InterceptTakeDamageGlobally(On.RoR2.HealthComponent.orig_TakeDamage orig, HealthComponent @this, DamageInfo damageInfo) {
 			if (damageInfo.HasModdedDamageType(XanConstants.VoidCollapse)) {
 				bool isBoss = @this.body.isBoss;
-				bool canInstakill = Configuration.IsVoidDeathInstakill && ((!isBoss) || (isBoss && Configuration.AllowInstakillOnBosses));
+				bool canInstakill = (!isBoss) || (isBoss && Configuration.AllowInstakillOnBosses);
 				// canInstakill if:
-				// 1: The feature is on, AND
+				// 1: The feature is on (this hook is not done if the feature is off), AND
 				// 2a: The character is not a boss, OR
 				// 2b: The character is a boss, and instakilling bosses is allowed
 
-				if (canInstakill) damageInfo.damage = float.MaxValue;
+				if (canInstakill) {
+					Log.LogTrace("Instakill is good to go. Goodbye.");
+					damageInfo.damageType |= DamageType.BypassArmor | DamageType.BypassBlock | DamageType.BypassOneShotProtection | DamageType.VoidDeath;
+					damageInfo.damage = float.MaxValue;
+				} else {
+					Log.LogTrace("Instakill was rejected. Entity is a boss and instakill bosses is off.");
+				}
 			}
 			orig(@this, damageInfo);
 		}
 
-		private static void OnPlayerReaverModelChanged(Transform obj) {
-			Animator animator = obj.GetComponent<Animator>();
-
-			if (animator != null) {
-				Log.LogMessage("Player is using the full size reaver model, the animation speed of their latest spawned model has been reduced to 0.825f to correct a speed error.");
-				animator.speed = 0.825f;
+		private static void InterceptTakeDamageForVoidResist(On.RoR2.HealthComponent.orig_TakeDamage orig, HealthComponent @this, DamageInfo damageInfo) {
+			if (damageInfo.rejected) {
+				orig(@this, damageInfo);
 				return;
 			}
-			Log.LogMessage("Player changed models, but no animator was present? " + obj?.ToString() ?? "null");
-		}
 
-		private static void InterceptTakeDamage(On.RoR2.HealthComponent.orig_TakeDamage orig, HealthComponent @this, DamageInfo dmg) {
 			if (@this.body != null && @this.body.baseNameToken == Lang.SURVIVOR_NAME) {
-				if (dmg.attacker == null && dmg.inflictor == null && dmg.damageType == (DamageType.BypassBlock | DamageType.BypassArmor)) {
-					// Log.LogDebug("Aborting what I believe to be Void atmosphere damage (no source, no inflictor, type bypasses blocks and armor only).");
-					dmg.rejected = true;
+				if (damageInfo.attacker == null && damageInfo.inflictor == null && damageInfo.damageType == (DamageType.BypassBlock | DamageType.BypassArmor)) {
+					Log.LogTrace("Rejecting damage for what I believe to be Void atmosphere damage (it has no source/attacker, and the damage type bypasses blocks and armor only).");
+					damageInfo.rejected = true;
 				}
 			}
 
-			orig(@this, dmg);
+			orig(@this, damageInfo);
 		}
 
 		private static void InterceptBuffsEvent(On.RoR2.CharacterBody.orig_SetBuffCount orig, CharacterBody @this, BuffIndex buffType, int newCount) {
 			if (@this.baseNameToken == Lang.SURVIVOR_NAME) {
-				BuffIndex megaVoidFog = DLC1Content.Buffs.VoidRaidCrabWardWipeFog.buffIndex;
-				BuffIndex voidFog = RoR2Content.Buffs.VoidFogStrong.buffIndex;
-				BuffIndex voidFogLite = RoR2Content.Buffs.VoidFogMild.buffIndex;
-				if (buffType == megaVoidFog || buffType == voidFogLite || buffType == voidFog) {
+				if (buffType == MegaVoidFog || buffType == NormVoidFog || buffType == WeakVoidFog) {
+					Log.LogTrace("Rejecting attempt to add fog to player's status effects.");
 					orig(@this, buffType, 0); // Always 0
 					return;
 				}
@@ -317,7 +354,52 @@ namespace FubukiMods.Modules {
 			orig(@this, buffType, newCount);
 		}
 
+		#region Values To Remember
+
+		/// <summary>
+		/// A reference to the highest power void fog.
+		/// </summary>
+		public static BuffIndex MegaVoidFog {
+			get {
+				if (_megaVoidFog == BuffIndex.None) {
+					_megaVoidFog = DLC1Content.Buffs.VoidRaidCrabWardWipeFog.buffIndex;
+				}
+				return _megaVoidFog;
+			}
+		}
+
+		/// <summary>
+		/// A reference to ordinary void fog.
+		/// </summary>
+		public static BuffIndex NormVoidFog {
+			get {
+				if (_normVoidFog == BuffIndex.None) {
+					_normVoidFog = RoR2Content.Buffs.VoidFogStrong.buffIndex;
+				}
+				return _normVoidFog;
+			}
+		}
+
+		/// <summary>
+		/// A reference to weak void fog.
+		/// </summary>
+		public static BuffIndex WeakVoidFog {
+			get {
+				if (_weakVoidFog == BuffIndex.None) {
+					_weakVoidFog = RoR2Content.Buffs.VoidFogMild.buffIndex;
+				}
+				return _weakVoidFog;
+			}
+		}
+
+		private static BuffIndex _megaVoidFog = BuffIndex.None;
+		private static BuffIndex _normVoidFog = BuffIndex.None;
+		private static BuffIndex _weakVoidFog = BuffIndex.None;
+
+		#endregion
+
 		#region Legacy Lunar Ability Hooks
+		/*
 		private static float OverrideLunarPrimaryRechargeInterval(LunarPrimaryReplacementSkill.orig_GetRechargeInterval orig, RoR2.Skills.LunarPrimaryReplacementSkill self, GenericSkill skillSlot) {
 			float rechargeTime = orig.Invoke(self, skillSlot);
 			bool takesLongerThan1s = rechargeTime > 1f;
@@ -361,6 +443,7 @@ namespace FubukiMods.Modules {
 				Reflection.SetFieldValue(self, "duration", 1.5f);
 			}
 		}
+		*/
 		#endregion
 
 	}
