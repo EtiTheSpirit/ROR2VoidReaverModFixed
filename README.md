@@ -27,10 +27,13 @@ An expansion upon [LuaFubuki's Void Reaver Mod](https://thunderstore.io/package/
 # Changelogs
 
 ## 2.0.3
-#### If this fix gets any hotter, I might not be able to contain myself!
+#### Cutely squishes one bug and vomits out another one. Oops colon three.
 
 ### Fixes
 * Fixed a regression reintroduced by 2.0.2 where the ragdoll of dead reaver players got stuck after finishing the death animation.
+
+### Other Changes
+* I changed the GUID of the plugin because right now nobody depends on said plugin. Its dependency string should remain the same, but the code reference and config file name will not.
 
 ## 2.0.2
 #### Hotfix for some bugs in 2.0.1

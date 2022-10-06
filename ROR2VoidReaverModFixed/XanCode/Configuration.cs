@@ -366,6 +366,9 @@ namespace ROR2VoidReaverModFixed.XanCode {
 			if (_cfg != null) throw new InvalidOperationException($"{nameof(Configuration)} has already been initialized!");
 			_cfg = cfg;
 
+			// The odd one out:
+			_traceLogging = cfg.Bind("6. Other Options", "Trace Logging", false, "If true, trace logging is enabled. Your console will practically be spammed as the mod gives status updates on every little thing it's doing, but it will help to diagnose weird issues. Consider using this when bug hunting!");
+
 			// TODO: I would *like* to get RiskOfOptions support but there are two critical issues preventing that
 
 			_baseMaxHealth = Bind("1. Character Vitality", "Base Maximum Health", 220f, StaticDeclareConfigDescription(string.Format(FMT_DEFAULT, "maximum health"), new AcceptableMinimum<float>(1f)));
@@ -419,13 +422,11 @@ namespace ROR2VoidReaverModFixed.XanCode {
 
 
 			// _useLegacyLunarBase = Bind("5. Void Reaver Specifics", "Use Legacy Lunar Mechanics", false, "If enabled, legacy abilities from when Lunar mechanics were used for the Primary and Utility slots will be implemented instead of their modern replacements.");
-			_useFullSizeCharacter = Bind("5. Void Reaver Specifics", "(EXPERIMENTAL) Use Full Size Reaver", false, "By default, the mod sets the Reaver's scale to 50% that of its natural size. Turning this on will make you the same size as a normal Reaver. **EXPERIMENTAL WARNING** This setting has not been tested very much and there will be problems with world collisions (you might not be able to traverse the whole world), attacks and interactions, and more. This setting mostly exists for giggles.");
+			_useFullSizeCharacter = Bind("5. Void Reaver Specifics", "Use Full Size Reaver", false, "By default, the mod sets the Reaver's scale to 50% that of its natural size. Turning this on will make you the same size as a normal Reaver. **EXPERIMENTAL WARNING** This setting has not been tested very much and there will be problems with world collisions (you might not be able to traverse the whole world), attacks and interactions, and more. This setting mostly exists for giggles.");
 			// _collapseFriendlyFire = Bind("5. Void Reaver Specifics", "(EXPERIMENTAL) Collapse Harms Players", false, "If enabled, any form of a void collapse (Reave, Collapse/Death) can deal damage to and/or kill friendly players. This mimics the behavior of the Newly Hatched Zoea, where friendly void enemies will still kill players caught in their death implosion. **EXPERIMENTAL WARNING** This may be inconsistent when using Reave.");
 			_voidImmunity = Bind("5. Void Reaver Specifics", "Void Immunity", true, "If enabled, the player will be immune to damage from a void atmosphere and will not have the fog effect applied to them. **EXPERIMENTAL WARNING** There isn't actually a way to tell if you are taking damage from the void. The way I do it is an educated guess. This means you may actually resist completely valid damage types from some enemies, but I have yet to properly test this.");
 
-			_useNewIcons = Bind("6. Other Options", "Use New Icons", true, "If true, this abandons the old pixel art icons created by LuaFubuki, and replaces them with renders that I made.");
-			_traceLogging = Bind("6. Other Options", "Trace Logging", false, "If true, trace logging is enabled. Your console will practically be spammed as the mod gives status updates on every little thing it's doing, but it will help to diagnose weird issues. Consider using this when bug hunting!");
-			
+			_useNewIcons = Bind("6. Other Options", "Use New Icons", true, "If true, this abandons the old pixel art icons created by LuaFubuki, and replaces them with renders that I made.");			
 
 			Log.LogInfo("User configs initialized.");
 		}

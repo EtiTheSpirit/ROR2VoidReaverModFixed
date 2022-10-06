@@ -17,7 +17,7 @@ namespace FubukiMods {
 		R2APISubmoduleDependency(nameof(PrefabAPI), nameof(LoadoutAPI), nameof(LanguageAPI), nameof(DamageAPI)),
 		NetworkCompatibility
 	]
-	[BepInPlugin("com.Fubuki.VoidReaver.XansEdit", "Void Reaver Survivor (Xan's Edit)", "2.0.3")]
+	[BepInPlugin("Xan.VoidReaverPlayerCharacter", "Void Reaver Survivor (Xan's Edit)", "2.0.3")]
 	public class MainPlugin : BaseUnityPlugin {
 
 #pragma warning disable Publicizer001
