@@ -17,23 +17,39 @@ An expansion upon [LuaFubuki's Void Reaver Mod](https://thunderstore.io/package/
 * If you are just starting out, there's lots of configs that are sorted as cleanly as they can be. If you dislike something mechanically, you can probably just change it yourself.
 
 ## Known Bugs
-* No other bugs are currently known.
+* Dying does not freeze your body. I don't actually know what this looks like on real void reavers because only players tend to jump and smash the suicide button in mid air (it does give you more style points)
 
 ## Special Thanks To...
 * **LuaFubuki**, for open sourcing the mod.
-* **Desync**, **Minno**, **Lordaniel**, and **Eggy** (some of my buddies) for doing multiplayer testing with me.
+* **Desync**, **Minno**, **Lordainel**, and **Eggy** (some of my buddies) for doing multiplayer testing with me.
 * **ROR2 Modding Discord** for making sure I was stumbling around the game's codebase in what is *mostly* the correct direction (also shoutouts for being an incredibly patient community of modders!)
 
 # Changelogs
 
+## 2.0.4
+#### hnng.,.. color,,,
+
+### Main Changes
+* Implemented my newly released [HPBarAPI](https://thunderstore.io/package/Xan/HPBarAPI/) to customize the display of the health bar, shields, and barriers of the Void Reaver player character.
+* Added a configuration option for the sprint speed multiplier.
+* Some mild attempts to fix the sprinting animation looking so goofy. The walk animation speed is now directly tied in with the real move speed, and it always plays at the real movement speed of the character (no modifier for sprinting anymore, for lack of an actual sprinting animation to play in the first place).
+* Setting the sprint speed multiplier to 1 to disable sprinting will disable the FOV increase that comes with sprinting.
+
 ## 2.0.3
-#### Cutely squishes one bug and vomits out another one. Oops colon three.
+#### Cutely squishes one bug and vomits out another one. Oops colon three. Oh woah, what's this, there's some new features in the vomit? That's kind of disgusting. Oh, right, your config files are gonna need to be rechecked again, because what's an update to this mod without requiring you to redo the bloody config files again, am I right?
+
+(All joking aside, it's an organizational thing because this mod is still in its active development. In other news, stay tuned for more because I just released an experimental API that allows customizing the healthbar graphics, so you might see that appear soonish!)
 
 ### Fixes
 * Fixed a regression reintroduced by 2.0.2 where the ragdoll of dead reaver players got stuck after finishing the death animation.
 
+### Mechanical Changes
+* Buffed Void Impulse by increasing its firerate (namely, the cooldown starts counting down immediately rather than after the firing period).
+* The configuration entry for the amount of time Impulse has to fire in has been edited accordingly (it has a lower maximum, but the value is the same)
+
 ### Other Changes
 * I changed the GUID of the plugin because right now nobody depends on said plugin. Its dependency string should remain the same, but the code reference and config file name will not.
+* Full Size Reaver option is no longer experimental. It works quite nicely!
 
 ## 2.0.2
 #### Hotfix for some bugs in 2.0.1

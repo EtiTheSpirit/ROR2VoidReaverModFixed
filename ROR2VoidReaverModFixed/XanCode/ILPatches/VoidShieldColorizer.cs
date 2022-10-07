@@ -15,6 +15,7 @@ namespace ROR2VoidReaverModFixed.XanCode.ILPatches {
 	/// </summary>
 	public static class VoidShieldColorizer {
 
+		[Obsolete("This is now managed by the HP Bar Color API", true)]
 		public static void Init() {
 			On.RoR2.HealthComponent.GetHealthBarValues += OverrideHealthBarValues;
 			IL.RoR2.CharacterModel.UpdateOverlays += OverrideOverlays;

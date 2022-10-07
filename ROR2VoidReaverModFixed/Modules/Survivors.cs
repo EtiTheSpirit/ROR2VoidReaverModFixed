@@ -3,9 +3,11 @@ using KinematicCharacterController;
 using R2API;
 using R2API.Utils;
 using RoR2;
+using ROR2HPBarAPI.API;
 using ROR2VoidReaverModFixed.XanCode;
 using ROR2VoidReaverModFixed.XanCode.Data;
 using ROR2VoidReaverModFixed.XanCode.Image;
+using ROR2VoidReaverModFixed.XanCode.Interop;
 using UnityEngine;
 using UnityEngine.Networking;
 using XanVoidReaverEdit;
@@ -18,7 +20,7 @@ namespace FubukiMods.Modules {
 	/// The survivor main module. This was originally written by LuaFubuki but was rewritten and refactored by Xan.
 	/// </summary>
 	public class Survivors {
-		public static void Init() {
+		public static void Init(MainPlugin plugin) {
 			GameObject playerBodyPrefab = Tools.CreateBody("PlayerNullifierBody", "RoR2/Base/Nullifier/NullifierBody.prefab");
 			GameObject playerBodyLocator = PrefabAPI.InstantiateClone(playerBodyPrefab.GetComponent<ModelLocator>().modelBaseTransform.gameObject, "PlayerNullifierBodyDisplay");
 			playerBodyLocator.AddComponent<NetworkIdentity>();
@@ -78,6 +80,7 @@ namespace FubukiMods.Modules {
 			body.baseRegen = Configuration.BaseHPRegen;
 			body.levelRegen = Configuration.LevelHPRegen;
 			body.baseMoveSpeed = Configuration.BaseMoveSpeed;
+			body.sprintingSpeedMultiplier = Configuration.SprintSpeedMultiplier;
 			body.levelMoveSpeed = Configuration.LevelMoveSpeed;
 			body.baseAcceleration = Configuration.BaseAcceleration;
 			body.baseJumpCount = Configuration.BaseJumpCount;
@@ -281,7 +284,58 @@ namespace FubukiMods.Modules {
 				Log.LogTrace("Void death instakill is enabled. Registering callback.");
 				On.RoR2.HealthComponent.TakeDamage += InterceptTakeDamageForInstakill;
 			}
+
+			On.EntityStates.BaseCharacterMain.UpdateAnimationParameters += OnAnimationParametersUpdated;
+			On.RoR2.CameraRigController.GenerateCameraModeContext += OnGeneratingCameraModeContext;
+			Log.LogTrace("Animator and camera overrides for sprinting implemented.");
+
+			BodyCatalog.availability.CallWhenAvailable(() => {
+				Registry.RegisterColorProvider(plugin, body.bodyIndex, new HPBarColorMarshaller());
+				Log.LogTrace("Custom Void-Style HP Bar colors registered.");
+			});
 		}
+
+#pragma warning disable Publicizer001
+		private static void OnAnimationParametersUpdated(On.EntityStates.BaseCharacterMain.orig_UpdateAnimationParameters originalMethod, BaseCharacterMain @this) {
+			if (!@this.hasCharacterBody) {
+				originalMethod(@this);
+				return;
+			}
+
+			CharacterBody body = @this.characterBody;
+			if (body.baseNameToken != Lang.SURVIVOR_NAME) {
+				originalMethod(@this);
+				return;
+			}
+
+			// Basically, spoof the animator into treating it as if the character is never sprinting.
+			bool originalSprinting = @this.characterBody._isSprinting;
+			@this.characterBody._isSprinting = false;
+			originalMethod(@this);
+			@this.characterBody._isSprinting = originalSprinting;
+		}
+		private static void OnGeneratingCameraModeContext(On.RoR2.CameraRigController.orig_GenerateCameraModeContext originalMethod, CameraRigController @this, out RoR2.CameraModes.CameraModeBase.CameraModeContext result) {
+			if (@this.targetBody == null) {
+				originalMethod(@this, out result);
+				return;
+			}
+			if (@this.targetBody.sprintingSpeedMultiplier > 1) {
+				originalMethod(@this, out result);
+				return;
+			}
+			if (@this.targetBody.baseNameToken != Lang.SURVIVOR_NAME) {
+				originalMethod(@this, out result);
+				return;
+			}
+
+			// If the sprint speed multiplier is less than or equal to 1, do not apply the FOV boost.
+			// To do this, trick the camera system into thinking we are not sprinting by changing the non-replicated variable.
+			bool originalSprinting = @this.targetBody._isSprinting;
+			@this.targetBody._isSprinting = false;
+			originalMethod(@this, out result);
+			@this.targetBody._isSprinting = originalSprinting;
+		}
+#pragma warning restore Publicizer001
 
 		private static void OnModelLocatorAwakened(On.RoR2.ModelLocator.orig_Awake orig, ModelLocator @this) {
 			orig(@this);

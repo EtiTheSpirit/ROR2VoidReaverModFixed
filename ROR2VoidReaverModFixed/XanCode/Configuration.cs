@@ -29,6 +29,8 @@ namespace ROR2VoidReaverModFixed.XanCode {
 		public static float BaseMoveSpeed => _baseMoveSpeed.Value;
 		public static float LevelMoveSpeed => _levelMoveSpeed.Value;
 
+		public static float SprintSpeedMultiplier => _sprintSpeedMultiplier.Value;
+
 		public static float BaseHPRegen => _baseHPRegen.Value;
 		public static float LevelHPRegen => _levelHPRegen.Value;
 
@@ -232,6 +234,8 @@ namespace ROR2VoidReaverModFixed.XanCode {
 		private static ConfigEntry<float> _baseMoveSpeed;
 		private static ConfigEntry<float> _levelMoveSpeed;
 
+		private static ConfigEntry<float> _sprintSpeedMultiplier;
+
 		private static ConfigEntry<float> _baseHPRegen;
 		private static ConfigEntry<float> _levelHPRegen;
 
@@ -382,6 +386,7 @@ namespace ROR2VoidReaverModFixed.XanCode {
 
 			_baseMoveSpeed = Bind("2. Character Agility", "Base Movement Speed", 7f, StaticDeclareConfigDescription(string.Format(FMT_DEFAULT, "walk speed"), new AcceptableMinimum<float>(0f, false, 0.1f)));
 			_levelMoveSpeed = Bind("2. Character Agility", "Leveled Movement Speed", 0f, StaticDeclareConfigDescription(string.Format(FMT_LEVELED, "walk speed"), new AcceptableMinimum<float>()));
+			_sprintSpeedMultiplier = Bind("2. Character Agility", "Sprint Speed Multiplier", 1.45f, StaticDeclareConfigDescription("Your sprint speed is equal to your Base Movement Speed times this value.", new AcceptableMinimum<float>()));
 			_baseAcceleration = Bind("2. Character Agility", "Acceleration Factor", 80f, StaticDeclareConfigDescription(string.Format(FMT_DEFAULT, "movement acceleration"), new AcceptableMinimum<float>()));
 			_baseJumpCount = Bind("2. Character Agility", "Jump Count", 1, StaticDeclareConfigDescription(string.Format(FMT_DEFAULT, "amount of jumps"), new AcceptableMinimum<int>()));
 			_baseJumpPower = Bind("2. Character Agility", "Base Jump Power", 20f, StaticDeclareConfigDescription(string.Format(FMT_DEFAULT, "amount of upward jump force"), new AcceptableMinimum<float>()));
@@ -409,7 +414,7 @@ namespace ROR2VoidReaverModFixed.XanCode {
 			_reaveCooldown = Bind("3d. Character Special", "Reave Cooldown", 30f, StaticDeclareConfigDescription("The amount of time, in seconds, that the player must wait before one stock of their special recharges.", new AcceptableMinimum<float>()));
 			_reaveHealthCostPercent = Bind("3d. Character Special", "Reave Cost", 0.5f, StaticDeclareConfigDescription("This is the health cost required to perform the \"Reave\" special. The actual manner in which this is used is determined by another setting in this category.", new AcceptableValueRange<float>(0f, 0.99f)));
 			_reaveImmunity = Bind("3d. Character Special", "Reave Protection", true, "While performing the \"Reave\" special, and if this is true, you will not be able to take damage while locked in the animation.");
-			_baseDeathDamage = Bind("3d. Character Special", "Collapse Damage", 750f, StaticDeclareConfigDescription("The amount of damage that the \"Collapse\" special does to enemies within.", new AcceptableMinimum<float>()));
+			_baseDeathDamage = Bind("3d. Character Special", "Collapse Damage", 750f, StaticDeclareConfigDescription("The amount of damage that the \"Collapse\" special does to enemies within. This value is multiplied by the base damage of the character.", new AcceptableMinimum<float>()));
 			_collapseInstakill = Bind("3d. Character Special", "Collapse Can Instakill", true, "If true, Collapse will instantly kill any enemy that is not immune to void deaths, making it behave identically to that of vanilla Void Reavers.");
 			_collapseInstakillAffectBoss = Bind("3d. Character Special", "Collapse Instakill Affects Bosses", false, "If Collapse Instakill is enabled, this determines whether or not it can affect bosses. Setting this to false is recommended so that runs aren't completely thrown.");
 

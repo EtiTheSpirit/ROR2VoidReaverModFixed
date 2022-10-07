@@ -1,11 +1,12 @@
 ﻿{
 	"name": "Void_Reaver_Player_Xan_Edit",
-	"version_number": "2.0.3",
+	"version_number": "2.0.4",
 	"website_url": "https://github.com/EtiTheSpirit/ROR2VoidReaverModFixed",
 	"description": "A redux of LuaFubuki's Void Reaver Player mod featuring bugfixes, new features, and a nice layer of polish.",
 	"dependencies": [
 		"bbepis-BepInExPack-5.4.9",
 		"tristanmcpherson-R2API-4.4.1",
-		"RiskofThunder-HookGenPatcher-1.2.3"
+		"RiskofThunder-HookGenPatcher-1.2.3",
+		"Xan-HPBarAPI-2.0.0"
 	]
 }

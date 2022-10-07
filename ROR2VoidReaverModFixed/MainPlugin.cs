@@ -17,7 +17,7 @@ namespace FubukiMods {
 		R2APISubmoduleDependency(nameof(PrefabAPI), nameof(LoadoutAPI), nameof(LanguageAPI), nameof(DamageAPI)),
 		NetworkCompatibility
 	]
-	[BepInPlugin("Xan.VoidReaverPlayerCharacter", "Void Reaver Survivor (Xan's Edit)", "2.0.3")]
+	[BepInPlugin("Xan.VoidReaverPlayerCharacter", "Void Reaver Survivor (Xan's Edit)", "2.0.4")]
 	public class MainPlugin : BaseUnityPlugin {
 
 #pragma warning disable Publicizer001
@@ -27,7 +27,7 @@ namespace FubukiMods {
 			Configuration.Init(Config);
 			XanConstants.Init();
 			Lang.Init();
-			VoidShieldColorizer.Init();
+			// VoidShieldColorizer.Init();
 
 
 			// On.RoR2.Networking.NetworkManagerSystemSteam.OnClientConnect += (s, u, t) => { };
@@ -94,7 +94,7 @@ namespace FubukiMods {
 			ContentAddition.AddProjectile(InstakillReaveProjectile);
 			Log.LogTrace("Registered black hole death projectile and custom its damage type, except this time its the one that really hurts.");
 
-			Survivors.Init();
+			Survivors.Init(this);
 		}
 #pragma warning restore Publicizer001
 

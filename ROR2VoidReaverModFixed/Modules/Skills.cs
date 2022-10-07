@@ -297,7 +297,7 @@ namespace FubukiMods.Modules {
 				base.Update();
 				bool isAuthority = base.isAuthority;
 				if (isAuthority) {
-					LayerMask hitMask = LayerIndex.world.mask | LayerIndex.entityPrecise.mask;
+					LayerMask hitMask = LayerIndex.world.mask | LayerIndex.enemyBody.mask;
 					bool hit = Physics.Raycast(GetAimRay(), out RaycastHit castResult, MAX_AIM_DISTANCE, hitMask);
 					if (hit) {
 						_areaSphere.transform.position = castResult.point;
