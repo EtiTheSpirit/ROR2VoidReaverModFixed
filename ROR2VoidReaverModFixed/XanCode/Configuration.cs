@@ -155,8 +155,7 @@ namespace ROR2VoidReaverModFixed.XanCode {
 		/// <summary>
 		/// Whether or not Reave/Collapse deals damage to friendly players even when artifact of Chaos is disabled.
 		/// </summary>
-		[Obsolete("This does not yet function properly.")]
-		public static bool VoidDeathFriendlyFire => false;//_collapseFriendlyFire.Value;
+		public static bool ReaveAndCollapseFriendlyFire => _collapseFriendlyFire.Value;
 
 		#region Reave
 
@@ -174,6 +173,11 @@ namespace ROR2VoidReaverModFixed.XanCode {
 		/// If true, the player cannot take damage whilst performing their Reave special.
 		/// </summary>
 		public static bool ReaveImmunity => _reaveImmunity.Value;
+
+		/// <summary>
+		/// If larger than zero, the player is inflicted with negative armor for a brief time after using Reave.
+		/// </summary>
+		public static float ReaveWeaknessDuration => _reaveWeaknessDuration.Value;
 		#endregion
 
 		#region Collapse
@@ -222,6 +226,11 @@ namespace ROR2VoidReaverModFixed.XanCode {
 		/// If true, debug logging should be done.
 		/// </summary>
 		public static bool TraceLogging => _traceLogging.Value;
+
+		/// <summary>
+		/// If true, killing with Reave and Collapse causes a highly exaggerated void death on enemies, sampling from the crit glasses.
+		/// </summary>
+		public static bool ExaggeratedReaveAndCollapse => _exaggeratedReaveAndCollapse.Value;
 		#endregion
 
 		#endregion
@@ -297,11 +306,12 @@ namespace ROR2VoidReaverModFixed.XanCode {
 		private static ConfigEntry<float> _reaveCooldown;
 		private static ConfigEntry<float> _reaveHealthCostPercent;
 		private static ConfigEntry<bool> _reaveImmunity;
+		private static ConfigEntry<float> _reaveWeaknessDuration;
 		#endregion
 
 		#region Collapse
 		private static ConfigEntry<float> _baseDeathDamage;
-		// private static ConfigEntry<bool> _collapseFriendlyFire;
+		private static ConfigEntry<bool> _collapseFriendlyFire;
 		private static ConfigEntry<bool> _collapseInstakill;
 		private static ConfigEntry<bool> _collapseInstakillAffectBoss;
 		#endregion
@@ -315,6 +325,8 @@ namespace ROR2VoidReaverModFixed.XanCode {
 		#endregion
 
 		#region Niche
+
+		private static ConfigEntry<bool> _exaggeratedReaveAndCollapse;
 
 		#endregion
 		#endregion
@@ -395,7 +407,7 @@ namespace ROR2VoidReaverModFixed.XanCode {
 			_basePrimaryDamage = Bind("3a. Character Primary", "Base Primary Damage", 1f, StaticDeclareConfigDescription("The character's Base Damage (see section 4) is multiplied by this value to determine the damage of a single void pearl (bullet). Since damage is dealt in two ticks, each tick doing half damage, this value is the total of both ticks combined.", new AcceptableMinimum<float>()));
 			_primaryImpulseBulletCount = Bind("3a. Character Primary", "Bullets Per Impulse Shot", 3, StaticDeclareConfigDescription("When using Void Impulse as your primary, this is the amount of bullets fired per shot by default.", new AcceptableMinimum<int>(1)));
 			_primaryImpulseSpread = Bind("3a. Character Primary", "Impulse Spread Factor", new Vector2(0, 1), StaticDeclareConfigDescription("The X component is the minimum spread, and the Y component is the maximum spread, of bullets shot with Void Impulse. Both are measured in degrees.", new AcceptableUserDefinedMinMax()));
-			_primarySpreadArcDegrees = Bind("3a. Character Primary", "Void Spread Total Arc Length", 20f, StaticDeclareConfigDescription("When using Void Spread as your primary, this value, measured in degrees, represents the angle between each of the five bullets in the spread. This angle is divided upon them evenly.", new AcceptableValueRange<float>(0, 360f)));
+			_primarySpreadArcDegrees = Bind("3a. Character Primary", "Void Spread Total Arc Length", 20f, StaticDeclareConfigDescription("When using Void Spread as your primary, this value, measured in degrees, represents the angle between each of the five bullets in the spread. This angle is divided among them evenly.", new AcceptableValueRange<float>(0, 360f)));
 			_primarySpreadBulletCount = Bind("3a. Character Primary", "Void Spread Bullets Per Shot", 5, StaticDeclareConfigDescription("Void Spread will fire this many projectiles in a horizontal fan. NOTE: It's a good idea for this value to be an odd number, so at least one bullet goes directly towards the crosshair.", new AcceptableMinimum<int>(1)));
 			_primarySpreadShotSpread = Bind("3a. Character Primary", "Void Spread Spread Factor", new Vector2(0, 0.2f), StaticDeclareConfigDescription("The X component is the minimum spread, and the Y component is the maximum spread, of bullets shot with Void Spread. Both are measured in degrees.", new AcceptableUserDefinedMinMax()));
 			_primaryImpulseShotTime = Bind("3a. Character Primary", "Impulse Shot Time", 0.3f, StaticDeclareConfigDescription("Void Impulse will try to fire all of its bullets in this amount of time.", new AcceptableValueRange<float>(0, 0.7f)));
@@ -410,16 +422,17 @@ namespace ROR2VoidReaverModFixed.XanCode {
 			_utilityRegen = Bind("3c. Character Utility", "Dive Regeneration", 0.15f, StaticDeclareConfigDescription("The percentage of health you regenerate when using Dive.", new AcceptableValueRange<float>(0, 1)));
 			_utilityDuration = Bind("3c. Character Utility", "Dive Duration", 1f, StaticDeclareConfigDescription("The amount of time, in seconds, that Dive hides and moves the player for.", new AcceptableMinimum<float>()));
 
-			_baseSpecialDamage = Bind("3d. Character Special", "Base Reave Damage", 60f, StaticDeclareConfigDescription(string.Format(FMT_DEFAULT, "special attack damage output") + " Note that this does not apply to the death effect. As such, this strictly affects the \"Reave\" ability.", new AcceptableMinimum<float>()));
+			_baseSpecialDamage = Bind("3d. Character Special", "Base Reave Damage", 50f, StaticDeclareConfigDescription(string.Format(FMT_DEFAULT, "special attack damage output") + " Note that this does not apply to the death effect. As such, this strictly affects the \"Reave\" ability.", new AcceptableMinimum<float>()));
 			_reaveCooldown = Bind("3d. Character Special", "Reave Cooldown", 30f, StaticDeclareConfigDescription("The amount of time, in seconds, that the player must wait before one stock of their special recharges.", new AcceptableMinimum<float>()));
-			_reaveHealthCostPercent = Bind("3d. Character Special", "Reave Cost", 0.5f, StaticDeclareConfigDescription("This is the health cost required to perform the \"Reave\" special. The actual manner in which this is used is determined by another setting in this category.", new AcceptableValueRange<float>(0f, 0.99f)));
+			_reaveHealthCostPercent = Bind("3d. Character Special", "Reave Cost", 0.5f, StaticDeclareConfigDescription("This is the percentage of your current health that will be taken from you after you perform the \"Reave\" special.", new AcceptableValueRange<float>(0f, 0.99f)));
 			_reaveImmunity = Bind("3d. Character Special", "Reave Protection", true, "While performing the \"Reave\" special, and if this is true, you will not be able to take damage while locked in the animation.");
-			_baseDeathDamage = Bind("3d. Character Special", "Collapse Damage", 750f, StaticDeclareConfigDescription("The amount of damage that the \"Collapse\" special does to enemies within. This value is multiplied by the base damage of the character.", new AcceptableMinimum<float>()));
-			_collapseInstakill = Bind("3d. Character Special", "Collapse Can Instakill", true, "If true, Collapse will instantly kill any enemy that is not immune to void deaths, making it behave identically to that of vanilla Void Reavers.");
+			_reaveWeaknessDuration = Bind("3d. Character Special", "Reave Weakness Duration", 10f, StaticDeclareConfigDescription("After performing the \"Reave\" special, and if this is not zero, you will be inflicted with the Pulverized status effect for this many seconds. This status effect causes you to take more damage.", new AcceptableMinimum<float>()));
+			_baseDeathDamage = Bind("3d. Character Special", "Collapse Damage", 300f, StaticDeclareConfigDescription("The amount of damage that the \"Collapse\" special does to enemies within. This value is multiplied by the base damage of the character.", new AcceptableMinimum<float>()));
+			_collapseInstakill = Bind("3d. Character Special", "Collapse Can Instakill", true, "If true, Collapse will instantly kill any enemy, making it behave identically to that of vanilla Void Reavers. It is strongly recommended to leave this enabled.");
 			_collapseInstakillAffectBoss = Bind("3d. Character Special", "Collapse Instakill Affects Bosses", false, "If Collapse Instakill is enabled, this determines whether or not it can affect bosses. Setting this to false is recommended so that runs aren't completely thrown.");
 
-			_baseDamage = Bind("4. Character Combat", "Base Damage", 20f, StaticDeclareConfigDescription(string.Format(FMT_DEFAULT, "base damage output") + " Other damage values are multiplied with this.", new AcceptableMinimum<float>()));
-			_levelDamage = Bind("4. Character Combat", "Leveled Damage", 2.4f, StaticDeclareConfigDescription(string.Format(FMT_LEVELED, "base damage output") + " Other damage values are multiplied with this.", new AcceptableMinimum<float>()));
+			_baseDamage = Bind("4. Character Combat", "Base Damage", 20f, StaticDeclareConfigDescription(string.Format(FMT_DEFAULT, "damage output") + " Other damage values are multiplied with this.", new AcceptableMinimum<float>()));
+			_levelDamage = Bind("4. Character Combat", "Leveled Damage", 2.4f, StaticDeclareConfigDescription(string.Format(FMT_LEVELED, "damage output") + " Other damage values are multiplied with this.", new AcceptableMinimum<float>()));
 			_baseCritChance = Bind("4. Character Combat", "Base Crit Chance", 1f, StaticDeclareConfigDescription(string.Format(FMT_DEFAULT, "critical hit chance") + " This is an integer percentage from 0 to 100, not 0 to 1.", new AcceptableValueRange<float>(0, 100)));
 			_levelCritChance = Bind("4. Character Combat", "Leveled Crit Chance", 0f, StaticDeclareConfigDescription(string.Format(FMT_LEVELED, "critical hit chance") + " This is an integer percentage from 0 to 100, not 0 to 1.", new AcceptableValueRange<float>(0, 100)));
 			_baseAttackSpeed = Bind("4. Character Combat", "Base Attack Speed", 1f, StaticDeclareConfigDescription(string.Format(FMT_DEFAULT, "attack rate"), new AcceptableMinimum<float>(0f, false, 0.1f)));
@@ -427,11 +440,12 @@ namespace ROR2VoidReaverModFixed.XanCode {
 
 
 			// _useLegacyLunarBase = Bind("5. Void Reaver Specifics", "Use Legacy Lunar Mechanics", false, "If enabled, legacy abilities from when Lunar mechanics were used for the Primary and Utility slots will be implemented instead of their modern replacements.");
-			_useFullSizeCharacter = Bind("5. Void Reaver Specifics", "Use Full Size Reaver", false, "By default, the mod sets the Reaver's scale to 50% that of its natural size. Turning this on will make you the same size as a normal Reaver. **EXPERIMENTAL WARNING** This setting has not been tested very much and there will be problems with world collisions (you might not be able to traverse the whole world), attacks and interactions, and more. This setting mostly exists for giggles.");
-			// _collapseFriendlyFire = Bind("5. Void Reaver Specifics", "(EXPERIMENTAL) Collapse Harms Players", false, "If enabled, any form of a void collapse (Reave, Collapse/Death) can deal damage to and/or kill friendly players. This mimics the behavior of the Newly Hatched Zoea, where friendly void enemies will still kill players caught in their death implosion. **EXPERIMENTAL WARNING** This may be inconsistent when using Reave.");
+			_useFullSizeCharacter = Bind("5. Void Reaver Specifics", "Use Full Size Reaver", false, "By default, the mod sets the Reaver's scale to 50% that of its natural size. Turning this on will make you the same size as a normal Reaver. **WARNING** This setting is known to cause collision issues and prevent the player from entering some very specific parts of the map (especially those relating to item unlocks). All main run locations can be entered, with the exception of a select couple of hidden chest locations.");
+			_collapseFriendlyFire = Bind("5. Void Reaver Specifics", "Reave and Collapse Harm Players", false, "If enabled, any form of a void collapse (Reave, Collapse/Death) can deal damage to and/or kill friendly players, even if Chaos is off. This mimics the behavior of the Newly Hatched Zoea, where friendly void creatures will still kill players caught in their death implosion.");
 			_voidImmunity = Bind("5. Void Reaver Specifics", "Void Immunity", true, "If enabled, the player will be immune to damage from a void atmosphere and will not have the fog effect applied to them. **EXPERIMENTAL WARNING** There isn't actually a way to tell if you are taking damage from the void. The way I do it is an educated guess. This means you may actually resist completely valid damage types from some enemies, but I have yet to properly test this.");
 
-			_useNewIcons = Bind("6. Other Options", "Use New Icons", true, "If true, this abandons the old pixel art icons created by LuaFubuki, and replaces them with renders that I made.");			
+			_useNewIcons = Bind("6. Other Options", "Use New Icons", true, "If true, this abandons the old pixel art icons created by LuaFubuki, and replaces them with renders that I made.");
+			_exaggeratedReaveAndCollapse = Bind("6. Other Options", "Exaggerated Reave/Collapse Kills", true, "If enabled, Reave and Collapse have exaggerated kill effects, politely borrowing the effect from the Lost Seer's Lenses.");
 
 			Log.LogInfo("User configs initialized.");
 		}

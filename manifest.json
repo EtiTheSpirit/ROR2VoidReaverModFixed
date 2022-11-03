@@ -1,6 +1,6 @@
 ﻿{
 	"name": "Void_Reaver_Player_Xan_Edit",
-	"version_number": "2.0.4",
+	"version_number": "2.0.6",
 	"website_url": "https://github.com/EtiTheSpirit/ROR2VoidReaverModFixed",
 	"description": "A redux of LuaFubuki's Void Reaver Player mod featuring bugfixes, new features, and a nice layer of polish.",
 	"dependencies": [

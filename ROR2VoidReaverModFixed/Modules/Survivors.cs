@@ -3,6 +3,7 @@ using KinematicCharacterController;
 using R2API;
 using R2API.Utils;
 using RoR2;
+using RoR2.Projectile;
 using ROR2HPBarAPI.API;
 using ROR2VoidReaverModFixed.XanCode;
 using ROR2VoidReaverModFixed.XanCode.Data;
@@ -267,14 +268,6 @@ namespace FubukiMods.Modules {
 
 			Tools.FinalizeBody(playerBodyPrefab.GetComponent<SkillLocator>());
 
-			/*
-			if (Configuration.UseLegacyLunarMechanics) {
-				GhostUtilitySkillState.OnEnter += OverrideLunarGhostStateDuration;
-				LunarPrimaryReplacementSkill.GetRechargeInterval += OverrideLunarPrimaryRechargeInterval;
-				LunarPrimaryReplacementSkill.GetMaxStock += OverrideLunarPrimaryMaxStock;
-				LunarPrimaryReplacementSkill.GetRechargeStock += OverrideLunarPrimaryRechargeStock;
-			}
-			*/
 			if (Configuration.VoidImmunity) {
 				Log.LogTrace("Void immunity is enabled. Registering callbacks.");
 				On.RoR2.CharacterBody.SetBuffCount += InterceptBuffsEvent;
@@ -284,18 +277,101 @@ namespace FubukiMods.Modules {
 				Log.LogTrace("Void death instakill is enabled. Registering callback.");
 				On.RoR2.HealthComponent.TakeDamage += InterceptTakeDamageForInstakill;
 			}
+			if (Configuration.ReaveAndCollapseFriendlyFire) {
+				Log.LogTrace("Reave and Collapse do friendly damage.");
+				On.RoR2.Projectile.ProjectileController.DispatchOnInitialized += BeforeDispatchingProjectileInit;
+			}
+			Log.LogTrace("Adding hook to enforce the void death effect on Reave and Collapse.");
+			On.RoR2.HealthComponent.TakeDamage += EnsureReaveAndCollapseAreVoidDeath;
 
+			Log.LogTrace("Adding animation correction hooks for full size reaver.");
 			On.EntityStates.BaseCharacterMain.UpdateAnimationParameters += OnAnimationParametersUpdated;
 			On.RoR2.CameraRigController.GenerateCameraModeContext += OnGeneratingCameraModeContext;
-			Log.LogTrace("Animator and camera overrides for sprinting implemented.");
 
 			BodyCatalog.availability.CallWhenAvailable(() => {
 				Registry.RegisterColorProvider(plugin, body.bodyIndex, new HPBarColorMarshaller());
 				Log.LogTrace("Custom Void-Style HP Bar colors registered.");
 			});
+
+			Log.LogTrace("Survivor setup completed.");
 		}
 
+
 #pragma warning disable Publicizer001
+
+		private static void BeforeDispatchingProjectileInit(On.RoR2.Projectile.ProjectileController.orig_DispatchOnInitialized originalMethod, ProjectileController @this) {
+			DamageAPI.ModdedDamageTypeHolderComponent dmg = @this.gameObject.GetComponent<DamageAPI.ModdedDamageTypeHolderComponent>();
+			if (dmg != null && dmg.Has(XanConstants.ReaveOrCollapse)) {
+				Log.LogTrace("A projectile with Collapse was created. Setting its team to none.");
+				TeamFilter filter = @this.gameObject.AddComponent<TeamFilter>();
+				filter.teamIndex = TeamIndex.Neutral;
+				@this.teamFilter = filter;
+			}
+			originalMethod(@this);
+		}
+
+		/// <summary>
+		/// Ensures that Reave and Collapse both cause the VFX associated with VoidDeath. This goes over a hurdle with Reave specifically
+		/// that prevents it from being able to use the VoidDeath type (this causes an instakill, and reave does not instakill).
+		/// Still, if reave kills, it needs to look like the instakill, so this handles that edge case.
+		/// </summary>
+		/// <param name="originalMethod"></param>
+		/// <param name="this"></param>
+		/// <param name="damageInfo"></param>
+		private static void EnsureReaveAndCollapseAreVoidDeath(On.RoR2.HealthComponent.orig_TakeDamage originalMethod, HealthComponent @this, DamageInfo damageInfo) {
+			if (damageInfo.rejected) {
+				originalMethod(@this, damageInfo);
+				return;
+			}
+
+			// Now instakill will be handled by another callback in this code (see InterceptTakeDamageForInstakill).
+			// We just need to handle death effects.
+			if (damageInfo.HasModdedDamageType(XanConstants.ReaveOrCollapse)) {
+
+				// Real quick:
+				Log.LogTrace("Set proc coefficient to 0.");
+				damageInfo.procCoefficient = 0; // Prevent void crit glasses from working (and anything else for that matter).
+				originalMethod(@this, damageInfo);
+
+				if (!@this.alive && @this.wasAlive) {
+					// We just died, and the attack classified as reave/collapse
+					// Depending on user pref, we might need to spawn the effect.
+					// Regardless of this, we need to quickly and (im)politely edit the last damage type for the character death.
+					// However, we should *not* do this if the receiver is immune to void death.
+					if (!@this.body.bodyFlags.HasFlag(CharacterBody.BodyFlags.ImmuneToVoidDeath)) {
+						Log.LogTrace("No immunity to void death. The character was just killed, so now I will quitely add the void death type to the killing damage type.");
+						@this.killingDamageType |= DamageType.VoidDeath;
+						// There, now all default death systems (and systems that choose to care about this property) will handle it appropriately.
+					}
+
+					if (Configuration.ExaggeratedReaveAndCollapse) {
+						Log.LogTrace("Exaggerated reave/collapse deaths are on. Spawning the special effect (if possible).");
+						// Spawn the cool VFX if the user opted into that.
+						Vector3 pos = @this.body.corePosition;
+						float radius = @this.body.bestFitRadius;
+
+						CharacterBody attacker = damageInfo.attacker?.GetComponent<CharacterBody>();
+						if (attacker != null) {
+							// In case the question comes up wrt "what if it already happened?"
+							// Reave and Collapse have a 0 proc coefficient. It can't.
+							EffectManager.SpawnEffect(
+								XanConstants.SilentVoidCritDeathEffect,
+								new EffectData {
+									origin = pos,
+									scale = radius
+								},
+								true
+							);
+						}
+					}
+				}
+
+				return;
+			}
+
+			originalMethod(@this, damageInfo);
+		}
+
 		private static void OnAnimationParametersUpdated(On.EntityStates.BaseCharacterMain.orig_UpdateAnimationParameters originalMethod, BaseCharacterMain @this) {
 			if (!@this.hasCharacterBody) {
 				originalMethod(@this);
@@ -314,6 +390,7 @@ namespace FubukiMods.Modules {
 			originalMethod(@this);
 			@this.characterBody._isSprinting = originalSprinting;
 		}
+		
 		private static void OnGeneratingCameraModeContext(On.RoR2.CameraRigController.orig_GenerateCameraModeContext originalMethod, CameraRigController @this, out RoR2.CameraModes.CameraModeBase.CameraModeContext result) {
 			if (@this.targetBody == null) {
 				originalMethod(@this, out result);
@@ -335,7 +412,6 @@ namespace FubukiMods.Modules {
 			originalMethod(@this, out result);
 			@this.targetBody._isSprinting = originalSprinting;
 		}
-#pragma warning restore Publicizer001
 
 		private static void OnModelLocatorAwakened(On.RoR2.ModelLocator.orig_Awake orig, ModelLocator @this) {
 			orig(@this);
@@ -355,9 +431,9 @@ namespace FubukiMods.Modules {
 			}
 		}
 
-		private static void InterceptTakeDamageForInstakill(On.RoR2.HealthComponent.orig_TakeDamage orig, HealthComponent @this, DamageInfo damageInfo) {
+		private static void InterceptTakeDamageForInstakill(On.RoR2.HealthComponent.orig_TakeDamage originalMethod, HealthComponent @this, DamageInfo damageInfo) {
 			if (damageInfo.rejected) {
-				orig(@this, damageInfo);
+				originalMethod(@this, damageInfo);
 				return;
 			}
 
@@ -368,16 +444,19 @@ namespace FubukiMods.Modules {
 				// 1: The feature is on (this hook is not done if the feature is off), AND
 				// 2a: The character is not a boss, OR
 				// 2b: The character is a boss, and instakilling bosses is allowed
+				// 3: It's not me
+
+				canInstakill = canInstakill && (damageInfo.attacker != @this.gameObject);
 
 				if (canInstakill) {
-					Log.LogTrace("Instakill is good to go. Goodbye.");
-					damageInfo.damageType |= DamageType.BypassArmor | DamageType.BypassBlock | DamageType.BypassOneShotProtection | DamageType.VoidDeath;
-					damageInfo.damage = float.MaxValue;
+					Log.LogTrace($"Instakill is good to go. Goodbye, {@this.body.GetDisplayName()}");
+					damageInfo.damageType |= DamageType.BypassArmor | DamageType.BypassBlock | DamageType.BypassOneShotProtection;
+					damageInfo.damage = @this.combinedHealth * 4;
 				} else {
 					Log.LogTrace("Instakill was rejected. Entity is a boss and instakill bosses is off.");
 				}
 			}
-			orig(@this, damageInfo);
+			originalMethod(@this, damageInfo);
 		}
 
 		private static void InterceptTakeDamageForVoidResist(On.RoR2.HealthComponent.orig_TakeDamage orig, HealthComponent @this, DamageInfo damageInfo) {
@@ -407,6 +486,7 @@ namespace FubukiMods.Modules {
 
 			orig(@this, buffType, newCount);
 		}
+#pragma warning restore Publicizer001
 
 		#region Values To Remember
 
@@ -451,54 +531,5 @@ namespace FubukiMods.Modules {
 		private static BuffIndex _weakVoidFog = BuffIndex.None;
 
 		#endregion
-
-		#region Legacy Lunar Ability Hooks
-		/*
-		private static float OverrideLunarPrimaryRechargeInterval(LunarPrimaryReplacementSkill.orig_GetRechargeInterval orig, RoR2.Skills.LunarPrimaryReplacementSkill self, GenericSkill skillSlot) {
-			float rechargeTime = orig.Invoke(self, skillSlot);
-			bool takesLongerThan1s = rechargeTime > 1f;
-			float result;
-			if (takesLongerThan1s) {
-				result = rechargeTime;
-			} else {
-				result = 1f;
-			}
-			return result;
-		}
-
-		private static int OverrideLunarPrimaryMaxStock(LunarPrimaryReplacementSkill.orig_GetMaxStock orig, RoR2.Skills.LunarPrimaryReplacementSkill self, GenericSkill skillSlot) {
-			int rechargeStock = orig.Invoke(self, skillSlot);
-			bool hasOverSix = rechargeStock > 6;
-			int result;
-			if (hasOverSix) {
-				result = rechargeStock;
-			} else {
-				result = 6;
-			}
-			return result;
-		}
-
-		private static int OverrideLunarPrimaryRechargeStock(LunarPrimaryReplacementSkill.orig_GetRechargeStock orig, RoR2.Skills.LunarPrimaryReplacementSkill self, GenericSkill skillSlot) {
-			int rechargeStock = orig.Invoke(self, skillSlot);
-			bool hasOverSix = rechargeStock > 6;
-			int result;
-			if (hasOverSix) {
-				result = rechargeStock;
-			} else {
-				result = 6;
-			}
-			return result;
-		}
-
-		private static void OverrideLunarGhostStateDuration(On.EntityStates.GhostUtilitySkillState.orig_OnEnter orig, EntityStates.GhostUtilitySkillState self) {
-			orig.Invoke(self);
-			bool durationIsZero = Reflection.GetFieldValue<float>(self, "duration") == 0f;
-			if (durationIsZero) {
-				Reflection.SetFieldValue(self, "duration", 1.5f);
-			}
-		}
-		*/
-		#endregion
-
 	}
 }

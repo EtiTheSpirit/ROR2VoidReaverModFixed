@@ -1,4 +1,5 @@
 ﻿#nullable enable
+#pragma warning disable IDE0029
 using UnityEngine;
 
 namespace ROR2VoidReaverModFixed.XanCode {
@@ -19,7 +20,6 @@ namespace ROR2VoidReaverModFixed.XanCode {
 		/// <param name="left"></param>
 		/// <param name="right"></param>
 		/// <returns></returns>
-		#pragma warning disable IDE0029
 		public static T? Or<T>(this T? left, T? right) where T : Object => left == null ? right : left;
 
 		/// <summary>
@@ -39,7 +39,8 @@ namespace ROR2VoidReaverModFixed.XanCode {
 		}
 
 		/// <summary>
-		/// An alternative to <see cref="System.Array.Empty{T}"/> for when the array will be mutated with functions like <see cref="System.Array.Resize{T}(ref T[], int)"/>
+		/// An alternative to <see cref="System.Array.Empty{T}"/>.<para/>
+		/// This is intended for use when the array will be mutated with functions like <see cref="System.Array.Resize{T}(ref T[], int)"/>
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <returns></returns>

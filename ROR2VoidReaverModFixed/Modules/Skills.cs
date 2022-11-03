@@ -370,10 +370,19 @@ namespace FubukiMods.Modules {
 		/// </summary>
 		public class VoidUtility : BaseState {
 
+			/// <summary>
+			/// Keeps track of the amount of time the effect has gone on for, which is used to add the feel of acceleration to the movement.
+			/// </summary>
 			private float _currentTime;
 
+			/// <summary>
+			/// The direction that the player is moving in. This will never be zero in practice.
+			/// </summary>
 			private Vector3 _moveVector = Vector3.zero;
 
+			/// <summary>
+			/// The cached Y velocity of the player, which affects the direction of the ability.
+			/// </summary>
 			private float _yVelocity = 0f;
 
 			private CharacterModel _characterModel;
@@ -460,11 +469,6 @@ namespace FubukiMods.Modules {
 		public class VoidSpecialOnDemand : BaseState {
 
 			/// <summary>
-			/// A reference to the projectile that spawns the explosion effect.
-			/// </summary>
-			public GameObject Projectile => MainPlugin.ReaveProjectile;
-
-			/// <summary>
 			/// This is used to late-fire the portal effect in FixedUpdate, which is the little poof that happens after the black hole.
 			/// </summary>
 			private bool _hasCreatedVoidPortalEffect = false;
@@ -481,6 +485,7 @@ namespace FubukiMods.Modules {
 
 			public override void OnEnter() {
 				base.OnEnter();
+				damageStat = characterBody.damage;
 				_zoomOutParams = default;
 				_zoomOutParams.cameraParamsData.idealLocalCameraPos = new Vector3(0f, 1f, -30f);
 				_zoomOutParams.cameraParamsData.pivotVerticalOffset = 0f;
@@ -488,8 +493,13 @@ namespace FubukiMods.Modules {
 
 				Transform muzzleTransform = FindModelChild(DeathState.muzzleName);
 				PlayCrossfade("Body", "Death", "Death.playbackRate", XanConstants.REAVER_DEATH_DURATION, 0.1f);
-				if (isAuthority && muzzleTransform != null) {
-					ProjectileManager.instance.FireProjectile(GetVoidExplosionFireInfo(this, Projectile, muzzleTransform, Configuration.BaseSpecialDamage));
+				if (NetworkServer.active && muzzleTransform != null) {
+					ProjectileManager.instance.FireProjectile(GetVoidExplosionFireInfo(
+						this, 
+						MainPlugin.ReaveProjectile, 
+						muzzleTransform,
+						Configuration.BaseSpecialDamage
+					));
 				} else if (muzzleTransform == null) {
 					Log.LogError("WARNING: Failed to execute Reave ability! The character does not have a muzzle transform. Were you deleted or something? You good? Did the furries read \"muzzle\" and steal it for their diabolical activities (if so then lmao also L)?");
 				}
@@ -508,10 +518,9 @@ namespace FubukiMods.Modules {
 						if (NetworkServer.active && selfDamage > 0) {
 							DamageInfo dmg = new DamageInfo {
 								//attacker = gameObject,
-								attacker = null,
 								crit = false,
 								damage = selfDamage,
-								damageType = DamageType.NonLethal | DamageType.BypassArmor | DamageType.BypassBlock | DamageType.Silent,
+								damageType = DamageType.NonLethal | DamageType.BypassArmor | DamageType.BypassBlock,
 								inflictor = gameObject,
 								position = transform.position,
 								procCoefficient = 0f
@@ -539,6 +548,9 @@ namespace FubukiMods.Modules {
 					HurtBoxGroup component = GetModelTransform().GetComponent<HurtBoxGroup>();
 					component.hurtBoxesDeactivatorCounter--;
 				}
+				if (Configuration.ReaveWeaknessDuration > 0 && NetworkServer.active) {
+					characterBody.AddTimedBuff(RoR2Content.Buffs.Pulverized, Configuration.ReaveWeaknessDuration);
+				}
 				base.OnExit();
 			}
 
@@ -557,7 +569,6 @@ namespace FubukiMods.Modules {
 			/// Press R to drink bleach flavored toaster bath water (gamer girl certified)
 			/// </summary>
 			public override void OnEnter() {
-
 				HealthComponent healthCmp = characterBody.gameObject.GetComponent<HealthComponent>();
 				healthCmp.health = 0;
 				healthCmp.shield = 0;
@@ -581,19 +592,31 @@ namespace FubukiMods.Modules {
 
 			private bool _isPlayerDeath;
 			private Transform _cachedModelTransform;
+			private GameObject _cachedGameObject;
 			private bool _hasDeleted = false;
+
+
+
+			/// <summary>
+			/// This controls the zoom effect when looking at the black hole.
+			/// </summary>
+			private CameraTargetParams.CameraParamsOverrideRequest _zoomOutParams;
+
+			/// <summary>
+			/// The references the zoom effect itself.
+			/// </summary>
+			private CameraTargetParams.CameraParamsOverrideHandle _zoomOutHandle;
 
 			public override void OnEnter() {
 				damageStat = characterBody.damage;
 				_isPlayerDeath = characterBody.master != null && characterBody.master.GetComponent<PlayerCharacterMasterController>() != null;
 				_cachedModelTransform = characterBody.gameObject.GetComponent<ModelLocator>().modelTransform;
+				_cachedGameObject = gameObject;
 
-				if (!rigidbody.isKinematic) {
-					rigidbody.velocity = Vector3.zero;
-					if (rigidbodyMotor != null) {
-						rigidbodyMotor.moveVector = Vector3.zero;
-					}
-				}
+				_zoomOutParams = default;
+				_zoomOutParams.cameraParamsData.idealLocalCameraPos = new Vector3(0f, 1f, -30f);
+				_zoomOutParams.cameraParamsData.pivotVerticalOffset = 0f;
+				_zoomOutHandle = GetComponent<CameraTargetParams>().AddParamsOverride(_zoomOutParams, 2f);
 
 				PlayCrossfade("Body", "Death", "Death.playbackRate", XanConstants.REAVER_DEATH_DURATION, 0.1f);
 				if (isAuthority) {
@@ -628,6 +651,9 @@ namespace FubukiMods.Modules {
 				fixedAge += Time.fixedDeltaTime;
 
 				if (fixedAge >= XanConstants.REAVER_DEATH_DURATION + Time.fixedDeltaTime && !_hasDeleted) {
+					CameraTargetParams target = GetComponent<CameraTargetParams>();
+					if (target != null) target.RemoveParamsOverride(_zoomOutHandle, 1f);
+
 					_hasDeleted = true;
 					DeleteReplicatedModel();
 				}
@@ -642,8 +668,8 @@ namespace FubukiMods.Modules {
 					_cachedModelTransform.gameObject.Destroy();
 				}
 				if (NetworkServer.active) {
-					if (gameObject) {
-						gameObject.Destroy(GenericCharacterDeath.minTimeToKeepBodyForNetworkMessages);
+					if (_cachedGameObject != null) {
+						_cachedGameObject.Destroy(GenericCharacterDeath.minTimeToKeepBodyForNetworkMessages);
 					}
 				}
 			}
@@ -653,62 +679,5 @@ namespace FubukiMods.Modules {
 			public override InterruptPriority GetMinimumInterruptPriority() => InterruptPriority.Death;
 		}
 
-		#region Lunar Alternates
-
-		/// <summary>
-		/// Not yet implemented. This is the legacy version of the primary attack that used Lunar effects.
-		/// </summary>
-		public class VoidLunarPrimary : BaseState {
-
-			private float _duration;
-
-			public override void OnEnter() {
-				base.OnEnter();
-				_duration = 0.1f / attackSpeedStat;
-				if (isAuthority) {
-					Ray aimRay = GetAimRay();
-					aimRay.direction = Util.ApplySpread(aimRay.direction, 0f, FireLunarNeedle.maxSpread, 1f, 1f, 0f, 0f);
-					FireProjectileInfo fireProjectileInfo = default;
-					fireProjectileInfo.position = aimRay.origin;
-					fireProjectileInfo.rotation = Quaternion.LookRotation(aimRay.direction);
-					fireProjectileInfo.crit = characterBody.RollCrit();
-					fireProjectileInfo.damage = characterBody.damage * FireLunarNeedle.damageCoefficient;
-					fireProjectileInfo.damageColorIndex = 0;
-					fireProjectileInfo.owner = gameObject;
-					fireProjectileInfo.procChainMask = default;
-					fireProjectileInfo.force = 0f;
-					fireProjectileInfo.useFuseOverride = false;
-					fireProjectileInfo.useSpeedOverride = false;
-					fireProjectileInfo.target = null;
-					fireProjectileInfo.projectilePrefab = FireLunarNeedle.projectilePrefab;
-					ProjectileManager.instance.FireProjectile(fireProjectileInfo);
-				}
-				float recoilAmplitude = FireLunarNeedle.recoilAmplitude;
-				AddRecoil(-0.4f * recoilAmplitude, -0.8f * recoilAmplitude, -0.3f * recoilAmplitude, 0.3f * recoilAmplitude);
-				characterBody.AddSpreadBloom(FireLunarNeedle.spreadBloomValue);
-				// StartAimMode(2f, false);
-				EffectManager.SimpleMuzzleFlash(FireLunarNeedle.muzzleFlashEffectPrefab, gameObject, "Head", false);
-				Util.PlaySound(FireLunarNeedle.fireSound, gameObject);
-			}
-
-			public override void FixedUpdate() {
-				base.FixedUpdate();
-				bool isTimeToExit = isAuthority && fixedAge >= _duration;
-				if (isTimeToExit) {
-					outer.SetNextStateToMain();
-				}
-			}
-
-			public override InterruptPriority GetMinimumInterruptPriority() {
-				return InterruptPriority.PrioritySkill;
-			}
-		}
-
-		/// <summary>
-		/// Not yet implemented. This is a duplicate of the pre-existing lunar utility replacement that I don't remember the name of.
-		/// </summary>
-		public class VoidLunarUtility : GhostUtilitySkillState { }
-
-		#endregion
 	}
 }

@@ -105,7 +105,7 @@ namespace ROR2VoidReaverModFixed.XanCode {
 			#region Name and Lore
 			Bind(SURVIVOR_NAME, "Void Reaver");
 			Bind(SURVIVOR_DESC, LinesToSurvivorDetails(
-				"The Void Reaver specializes in low to mid range combat, and supports classes that specialize in crowd control.",
+				"The Void Reaver specializes in mid range combat, and supports classes that specialize in crowd control.",
 				"<style=cIsVoid>Void Impulse</style> is good for high damage against single targets at any range. In contrast, <style=cIsVoid>Void Spread</style> is much better for crowd control and targeting more than one monster at once.",
 				"<style=cIsVoid>Undertow</style> can greatly assist allies in finishing off targets as well as giving you a moment of breathing room to focus on other monsters.",
 				"<style=cIsVoid>Dive</style> is a powerful escape tool. Alongside healing you, it also makes enemies lose track of you, and protects you from incoming damage.",
@@ -124,11 +124,8 @@ namespace ROR2VoidReaverModFixed.XanCode {
 			// lmao
 			if (Configuration.IsVoidDeathInstakill) {
 				voidDeathDamageApplication.Append("<style=cIsDamage>instantly killing</style> all monsters ");
-				if (Configuration.AllowInstakillOnBosses) {
-					// Yes boss
-					if (Configuration.VoidDeathFriendlyFire) {
-						voidDeathDamageApplication.Append("<style=cIsDamage>and players</style> ");
-					}
+				if (Configuration.ReaveAndCollapseFriendlyFire) {
+					voidDeathDamageApplication.Append("<style=cIsDamage>and players</style> ");
 				}
 				voidDeathDamageApplication.Append("caught within.");
 				if (!Configuration.AllowInstakillOnBosses) {
@@ -137,7 +134,7 @@ namespace ROR2VoidReaverModFixed.XanCode {
 				}
 			} else {
 				voidDeathDamageApplication.Append($"<style=cIsDamage>dealing {Percentage(Configuration.BaseDeathDamage)} damage</style> to all monsters ");
-				if (Configuration.VoidDeathFriendlyFire) {
+				if (Configuration.ReaveAndCollapseFriendlyFire) {
 					voidDeathDamageApplication.Append("<style=cIsDamage>and players</style> ");
 				}
 				voidDeathDamageApplication.Append("caught within.");
@@ -180,7 +177,7 @@ namespace ROR2VoidReaverModFixed.XanCode {
 
 			#region Special
 			Bind(SKILL_SPECIAL_WEAK_NAME, "Reave");
-			Bind(SKILL_SPECIAL_WEAK_DESC, $"Sacrifice <style=cIsHealth>{Percentage(Configuration.ReaveCost)} of your health</style> to trigger a weaker form of <style=cIsVoid>Collapse</style>, dealing <style=cIsDamage>{Percentage(Configuration.BaseSpecialDamage)} damage</style> to all monsters {(Configuration.VoidDeathFriendlyFire ? "<style=cIsDamage>and players</style> " : string.Empty)}caught within.");
+			Bind(SKILL_SPECIAL_WEAK_DESC, $"Sacrifice <style=cIsHealth>{Percentage(Configuration.ReaveCost)} of your health</style>{(Configuration.ReaveWeaknessDuration > 0 ? $" and get <style=cIsDamage>Pulverized</style> for <style=cUserSetting>{Configuration.ReaveWeaknessDuration}</style> seconds (reducing <style=cIsUtility>Armor</style> by 60)" : string.Empty)} to trigger a weaker form of <style=cIsVoid>Collapse</style>, dealing <style=cIsDamage>{Percentage(Configuration.BaseSpecialDamage)} damage</style> to all monsters {(Configuration.ReaveAndCollapseFriendlyFire ? "<style=cIsDamage>and players</style> " : string.Empty)}caught within.");
 			Bind(SKILL_SPECIAL_SUICIDE_NAME, "Collapse");
 			Bind(SKILL_SPECIAL_SUICIDE_DESC, $"<style=cDeath>{SKULL} Extinguish your life {SKULL}</style> to trigger <style=cIsVoid>Collapse</style>, {voidDeathEndDesc}");
 			#endregion

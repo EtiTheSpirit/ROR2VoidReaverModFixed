@@ -253,7 +253,6 @@ namespace FubukiMods.Modules {
 
 			LoadoutAPI.AddSkinToCharacter(bodyContainer, defaultSkin);
 			LoadoutAPI.AddSkinToCharacter(bodyContainer, ghostSkin);
-
 		}
 #pragma warning restore Publicizer001
 	}

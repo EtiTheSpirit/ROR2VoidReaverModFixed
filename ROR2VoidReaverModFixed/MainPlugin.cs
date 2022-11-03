@@ -17,18 +17,20 @@ namespace FubukiMods {
 		R2APISubmoduleDependency(nameof(PrefabAPI), nameof(LoadoutAPI), nameof(LanguageAPI), nameof(DamageAPI)),
 		NetworkCompatibility
 	]
-	[BepInPlugin("Xan.VoidReaverPlayerCharacter", "Void Reaver Survivor (Xan's Edit)", "2.0.4")]
+	[BepInPlugin(PLUGIN_GUID, DISPLAY_NAME, VERSION)]
 	public class MainPlugin : BaseUnityPlugin {
 
-#pragma warning disable Publicizer001
+		public const string PLUGIN_GUID = "Xan.VoidReaverPlayerCharacter";
+		public const string DISPLAY_NAME = "Void Reaver Survivor (Xan's Edit)";
+		public const string VERSION = "2.0.5";
+
 		void Awake() {
 			Log.Init(Logger);
-			Log.LogMessage("Xan's Void Reaver Mod has started its intiialization cycle.");
+			Log.LogMessage("Xan's Void Reaver Mod has started its initialization cycle.");
 			Configuration.Init(Config);
 			XanConstants.Init();
 			Lang.Init();
 			// VoidShieldColorizer.Init();
-
 
 			// On.RoR2.Networking.NetworkManagerSystemSteam.OnClientConnect += (s, u, t) => { };
 
@@ -65,12 +67,8 @@ namespace FubukiMods {
 
 			ReaveProjectile = PrefabAPI.InstantiateClone(Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Nullifier/NullifierDeathBombProjectile.prefab").WaitForCompletion(), "VoidSpecialAttack", true);
 			ProjectileDamage reaveDamage = ReaveProjectile.GetComponent<ProjectileDamage>();
-			ProjectileController reaveController = ReaveProjectile.GetComponent<ProjectileController>();
 			ProjectileExplosion reaveBaseExplosion = ReaveProjectile.GetComponent<ProjectileExplosion>();
 			ProjectileImpactExplosion reaveImpactExplosion = ReaveProjectile.GetComponent<ProjectileImpactExplosion>();
-			reaveController.teamFilter = new TeamFilter {
-				teamIndex = TeamIndex.None // This will allow it to hit everything.
-			};
 			reaveBaseExplosion.blastAttackerFiltering = AttackerFiltering.NeverHitSelf;
 			reaveBaseExplosion.blastDamageCoefficient = 1f;
 			reaveBaseExplosion.blastProcCoefficient = 1f;
@@ -82,21 +80,24 @@ namespace FubukiMods {
 			}
 			reaveDamage.damage = 1f;
 			reaveDamage.damageColorIndex = DamageColorIndex.Void;
-			reaveDamage.damageType = DamageType.VoidDeath | DamageType.BypassArmor | DamageType.BypassBlock | DamageType.BypassOneShotProtection;//RoR2.DamageType.LunarSecondaryRootOnHit;
+			reaveDamage.damageType = DamageType.BypassArmor | DamageType.BypassBlock | DamageType.BypassOneShotProtection; // Do NOT include VoidDeath on reave!!!
 			reaveImpactExplosion.lifetime = XanConstants.REAVER_DEATH_DURATION;
 			reaveImpactExplosion.falloffModel = BlastAttack.FalloffModel.None;
+			ReaveProjectile.AddComponent<DamageAPI.ModdedDamageTypeHolderComponent>().Add(XanConstants.ReaveOrCollapse);
 			ContentAddition.AddProjectile(ReaveProjectile);
-			Log.LogTrace("Registered black hole death projectile and custom its damage type.");
+			Log.LogTrace("Registered Reave death projectile and custom its damage type.");
 
 			InstakillReaveProjectile = PrefabAPI.InstantiateClone(ReaveProjectile, "VoidSpecialAttackInstakill", true);
-			DamageAPI.ModdedDamageTypeHolderComponent reaveModDamageTypeHolder = InstakillReaveProjectile.AddComponent<DamageAPI.ModdedDamageTypeHolderComponent>();
-			reaveModDamageTypeHolder.Add(XanConstants.VoidCollapse);
+			// DO include VoidDeath on this one though
+			ProjectileDamage collapseDamage = InstakillReaveProjectile.GetComponent<ProjectileDamage>();
+			DamageAPI.ModdedDamageTypeHolderComponent collapseModDamageTypeHolder = InstakillReaveProjectile.GetComponent<DamageAPI.ModdedDamageTypeHolderComponent>();
+			collapseDamage.damageType |= DamageType.VoidDeath;
+			collapseModDamageTypeHolder.Add(XanConstants.VoidCollapse);
 			ContentAddition.AddProjectile(InstakillReaveProjectile);
-			Log.LogTrace("Registered black hole death projectile and custom its damage type, except this time its the one that really hurts.");
+			Log.LogTrace("Registered Reave death projectile and custom its damage type (except this time its the one that really hurts).");
 
 			Survivors.Init(this);
 		}
-#pragma warning restore Publicizer001
 
 		/// <summary>
 		/// The custom primary attack for the reaver

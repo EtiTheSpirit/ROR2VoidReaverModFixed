@@ -2,22 +2,23 @@
 An expansion upon [LuaFubuki's Void Reaver Mod](https://thunderstore.io/package/LuaFubuki/Void_Reaver/) that features my personal improvements, bugfixes, and more!
 
 ## Features
-* All abilities of LuaFubuki's original Void Reaver mod
-  * This notably lacks the legacy abilities using Lunar item mechanics. I have not yet implemented them and plan to remove them. If any of you reading this are particularly outspoken about this, please contact me. The GitHub repo is attached to this mod.
+* All abilities of LuaFubuki's original Void Reaver mod.
 * The addition of the **Collapse** special, the more aggressive alternative to **Reave**. Kill yourself ~~immediately~~ to trigger the Void Reaver's death implosion.
-  * As implied, dying will cause an implosion. Use this to your advantage!
-  * Currently this does not kill players without Chaos enabled. I am looking to add it as an option in the future.
-* Dozens of tweaks to behavior and fixes to mild issues.
 * (Optional) Fresh icons for all the abilities and the survivor.
-* Tons of new configuration options to personalize your experience.
+* Tons of new configuration options to personalize your experience and tweak nearly all facets of the mod.
 
 ## Important Notes
-* A new major version has just released. Expect potentially strange issues, especially with new settings!
 * It should be unsaid, but **make sure your config matches everybody else's** in multiplayer. If you see someone floating, or in the ground, your configuration (or theirs) isn't matched. There's a lot of graphics related tweaks here that might make for an inconsistent experience if they aren't matched.
-* If you are just starting out, there's lots of configs that are sorted as cleanly as they can be. If you dislike something mechanically, you can probably just change it yourself.
+* If you are just starting out, there's lots of configs that are sorted as cleanly as they can be. If you dislike something mechanically, you can probably just change it yourself! If a configuration option is missing, please let me know.
 
-## Known Bugs
-* Dying does not freeze your body. I don't actually know what this looks like on real void reavers because only players tend to jump and smash the suicide button in mid air (it does give you more style points)
+## Need to contact me?
+* You can find me in the RoR2 modding discord. I am nicknamed `Xan`, my discriminator is #1760.
+* If you prefer another way, I have a website https://etithespir.it/ with more methods.
+
+## Known Bugs / To-Do List (Fixes)
+* There are no currently known bugs.
+* I am looking into the preview model (pre-game screen) being in the falling animation, I would like to fix this.
+* I may implement a stronger variant of Pulverized that subtracts more armor for Reave, the amount being configurable.
 
 ## Special Thanks To...
 * **LuaFubuki**, for open sourcing the mod.
@@ -26,14 +27,44 @@ An expansion upon [LuaFubuki's Void Reaver Mod](https://thunderstore.io/package/
 
 # Changelogs
 
+## 2.0.6
+#### In all fairness, it *was* pretty OP.
+
+### New Features
+* Added the option to inflict Pulverized to yourself upon using Reave. This should balance its rather high damage by rendering you weak after using it, hopefully providing a mechanic through which players can further balance the ability in their modpacks. The default duration is 10 seconds. Set the time to 0 in your configuration to disable this drawback.
+
+### Changes
+* Reduced the default configuration value for Reave damage (from 6,000% to 5,000%)
+* Dramatically reduced the default configuration value for Collapse damage (from 75,000% to 30,000%). It still needs to be OP given that you die upon using it, but not *that* OP.
+
+### Fixes
+* Fixed a bug where the camera zoom effect only occurred when using Reave and not Collapse. Both abilities should now properly trigger the zoom out effect.
+
+## 2.0.5
+#### Try not to get deleted.
+
+### New Features
+* Added a new config option to allow Reave and Collapse to do PvP damage, even if Artifact of Chaos is disabled. This mimics the behavior of the [Newly Hatched Zoea](https://riskofrain2.fandom.com/wiki/Newly_Hatched_Zoea) reavers, whose death will kill friendlies.
+
+### Fixes
+* Fixed a bug causing enemies killed with Reave and Collapse to not have their deaths classified as `VoidDeath`, making it look like an ordinary kill had occurred instead of the proper disappearing effect (this requires some jank to work but it's extremely consistent jank, so that's what matters).
+* Fixed some phrasing in the menus when combinations of instakill, boss instakill, and pvp were used.
+* Fixed the phrasing of some config options.
+
 ## 2.0.4
 #### hnng.,.. color,,,
 
-### Main Changes
+### New Features
 * Implemented my newly released [HPBarAPI](https://thunderstore.io/package/Xan/HPBarAPI/) to customize the display of the health bar, shields, and barriers of the Void Reaver player character.
-* Added a configuration option for the sprint speed multiplier.
-* Some mild attempts to fix the sprinting animation looking so goofy. The walk animation speed is now directly tied in with the real move speed, and it always plays at the real movement speed of the character (no modifier for sprinting anymore, for lack of an actual sprinting animation to play in the first place).
-* Setting the sprint speed multiplier to 1 to disable sprinting will disable the FOV increase that comes with sprinting.
+* Added a configuration option for the sprint speed multiplier. Setting the sprint speed multiplier to 1 (to disable sprinting) will also disable the FOV increase that comes with sprinting.
+* Added a configuration option (on by default) to use exaggerated kill effects when killing with Reave and Collapse. This borrows the visual effect from the Lost-Seer's Lenses (but notably removes the sound effect because that shit got LOUD - it still plays from the actual kill animation itself, so its not *gone*, its just incapable of breaking everybody's eardrums).
+
+### Fixes
+* Fixed a bug causing Collapse to screw up the post-run stats, saying players that got kills with it did 9,223,372,036,854,775,807 damage in the run.
+* Not really a bug, but an annoying issue nonetheless, because the player has no sprint animation it would look very strange while sprinting (and out of sync). The "sprint animation" is now just "impolitely convincing the system that you aren't actually sprinting" so that the dynamic walk speed is what gets applied instead. tl;dr fix goofy out of sync sprint animation.
+
+### Internal Changes
+* The DLL's "File Version" field in Properties now reflects upon the mod version. I don't know if I will be able to actually stick to this but I'll try. I'll also keep track of test number in the fourth digit for some internal stuffs.
 
 ## 2.0.3
 #### Cutely squishes one bug and vomits out another one. Oops colon three. Oh woah, what's this, there's some new features in the vomit? That's kind of disgusting. Oh, right, your config files are gonna need to be rechecked again, because what's an update to this mod without requiring you to redo the bloody config files again, am I right?
