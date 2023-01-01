@@ -17,10 +17,11 @@ namespace ROR2VoidReaverModFixed.XanCode {
 
 		public const string UNIQUE_SURVIVOR_PREFIX = "VOID_REAVER_PLAYER";
 
-		public const string SURVIVOR_NAME = $"{UNIQUE_SURVIVOR_PREFIX}_NAME"; // This MUST be prefixed by _NAME
-		public const string SURVIVOR_DESC = $"{UNIQUE_SURVIVOR_PREFIX}_DESCRIPTION"; // This MUST be prefixed by _DESCRIPTION
-		public const string SURVIVOR_LORE = $"{UNIQUE_SURVIVOR_PREFIX}_LORE"; // This MUST be prefixed by _LORE
+		public const string SURVIVOR_NAME = $"{UNIQUE_SURVIVOR_PREFIX}_NAME";
+		public const string SURVIVOR_DESC = $"{UNIQUE_SURVIVOR_PREFIX}_DESCRIPTION";
+		public const string SURVIVOR_LORE = $"{UNIQUE_SURVIVOR_PREFIX}_LORE";
 		public const string SURVIVOR_OUTRO = $"{UNIQUE_SURVIVOR_PREFIX}_OUTRO_FLAVOR";
+		public const string SURVIVOR_OUTRO_FAILED = $"{UNIQUE_SURVIVOR_PREFIX}_OUTRO_FLAVOR_FAIL"; // As far as this one goes, I am not actually sure if it gets used. I'll add it anyway.
 
 		public const string DEFAULT_SKIN = $"{UNIQUE_SURVIVOR_PREFIX}_DEFAULT_SKIN";
 		public const string GHOST_SKIN = $"{UNIQUE_SURVIVOR_PREFIX}_GHOST_SKIN";
@@ -42,6 +43,9 @@ namespace ROR2VoidReaverModFixed.XanCode {
 		public const string SKILL_UTILITY_DESC = $"{UNIQUE_SURVIVOR_PREFIX}_SKILL_UTILITY_DESC";
 		public const string SKILL_SPECIAL_WEAK_DESC = $"{UNIQUE_SURVIVOR_PREFIX}_SKILL_SPECIAL_WEAK_DESC";
 		public const string SKILL_SPECIAL_SUICIDE_DESC = $"{UNIQUE_SURVIVOR_PREFIX}_SKILL_SPECIAL_SUICIDE_DESC";
+
+		public const string VOID_RIFT_SHOCK_NAME = "VOID_RIFT_SHOCK_NAME";
+		public const string VOID_RIFT_SHOCK_DESC = "VOID_RIFT_SHOCK_DESC";
 
 		private const string SKULL = "<sprite name=\"Skull\" tint=1>";
 
@@ -112,13 +116,16 @@ namespace ROR2VoidReaverModFixed.XanCode {
 				"<style=cIsVoid>Collapse</style> (<style=cIsVoid>Reave</style>'s more aggressive counterpart), which is triggered upon your death (either naturally, or by activating the dedicated ability), will cause the same implosion effect seen on ordinary Void Reavers. Closing the distance between yourself and strong enemies when you are about to die could be extremely useful to your fellow survivors!"
 			));
 			Bind(SURVIVOR_LORE, THE_LORE);
-			Bind(SURVIVOR_OUTRO, "..and so it left, intrigued at how life was so familiarly destructive");
+			Bind(SURVIVOR_OUTRO, "..and so it left, intrigued to become what it once sought to capture");
+			Bind(SURVIVOR_OUTRO_FAILED, "..and so it was detained, awaiting its sentence at the end of Time");
 			#endregion
 
 			#region Palettes
 			Bind(DEFAULT_SKIN, "Default");
 			Bind(GHOST_SKIN, "Friendly");
 			#endregion
+
+			#region Special (prep)
 
 			StringBuilder voidDeathDamageApplication = new StringBuilder();
 			// lmao
@@ -140,8 +147,9 @@ namespace ROR2VoidReaverModFixed.XanCode {
 				voidDeathDamageApplication.Append("caught within.");
 			}
 			string voidDeathEndDesc = voidDeathDamageApplication.ToString();
-			
-			
+
+			#endregion
+
 			#region Passive
 			string voidBornIntro = "The Void Reaver inherits all of the benefits and drawbacks of its kin.";
 			string desc = $"[ Collapse ]\n<style=cSub>Upon death, <style=cIsVoid>Collapse</style> is triggered, {voidDeathEndDesc}";
@@ -176,10 +184,15 @@ namespace ROR2VoidReaverModFixed.XanCode {
 			#endregion
 
 			#region Special
-			Bind(SKILL_SPECIAL_WEAK_NAME, "Reave");
-			Bind(SKILL_SPECIAL_WEAK_DESC, $"Sacrifice <style=cIsHealth>{Percentage(Configuration.ReaveCost)} of your health</style>{(Configuration.ReaveWeaknessDuration > 0 ? $" and get <style=cIsDamage>Pulverized</style> for <style=cUserSetting>{Configuration.ReaveWeaknessDuration}</style> seconds (reducing <style=cIsUtility>Armor</style> by 60)" : string.Empty)} to trigger a weaker form of <style=cIsVoid>Collapse</style>, dealing <style=cIsDamage>{Percentage(Configuration.BaseSpecialDamage)} damage</style> to all monsters {(Configuration.ReaveAndCollapseFriendlyFire ? "<style=cIsDamage>and players</style> " : string.Empty)}caught within.");
-			Bind(SKILL_SPECIAL_SUICIDE_NAME, "Collapse");
-			Bind(SKILL_SPECIAL_SUICIDE_DESC, $"<style=cDeath>{SKULL} Extinguish your life {SKULL}</style> to trigger <style=cIsVoid>Collapse</style>, {voidDeathEndDesc}");
+			Bind(SKILL_SPECIAL_WEAK_NAME, "Detain");
+			Bind(SKILL_SPECIAL_WEAK_DESC, $"Sacrifice <style=cIsHealth>{Percentage(Configuration.DetainCost)} of your health</style>{(Configuration.DetainWeaknessDuration > 0 ? $" and get <style=cIsDamage>Void Rift Shock</style> for <style=cUserSetting>{Configuration.DetainWeaknessDuration}</style> seconds (reducing <style=cIsUtility>Armor</style> by <style=cUserSetting>{Configuration.DetainWeaknessArmorReduction}</style>)" : string.Empty)} to trigger a weaker form of <style=cIsVoid>Reave</style>, dealing <style=cIsDamage>{Percentage(Configuration.BaseSpecialDamage)} damage</style> to all monsters {(Configuration.ReaveAndCollapseFriendlyFire ? "<style=cIsDamage>and players</style> " : string.Empty)}caught within.");
+			Bind(SKILL_SPECIAL_SUICIDE_NAME, "Reave");
+			Bind(SKILL_SPECIAL_SUICIDE_DESC, $"<style=cDeath>{SKULL} Extinguish your life {SKULL}</style> to <style=cIsVoid>Reave</style> your surroundings, {voidDeathEndDesc}");
+			#endregion
+
+			#region Interoperability
+			Bind(VOID_RIFT_SHOCK_NAME, "Void Rift Shock");
+			Bind(VOID_RIFT_SHOCK_DESC, $"Forcefully ripping The Void open has reduced your <style=cIsUtility>Armor</style> by <style=cUserSetting>{Configuration.DetainWeaknessArmorReduction}</style>.");
 			#endregion
 		}
 #pragma warning restore CS0618

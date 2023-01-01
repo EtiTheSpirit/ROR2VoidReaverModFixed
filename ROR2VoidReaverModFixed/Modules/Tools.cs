@@ -28,7 +28,7 @@ namespace FubukiMods.Modules {
 		}
 
 		/// <summary>
-		/// Designed by LuaFubuki, modified very slightly by Xan.<br/>
+		/// Designed by LuaFubuki, modified very slightly by Xan.<para/>
 		/// Takes in an encoded texture as a string that is a 16-color palette lookup table. The string's length is identical to the number of pixels.
 		/// </summary>
 		/// <param name="textureData">A list of hex digits that correspond to an entry in <paramref name="palette"/>. The length of this string must be a power of two.</param>
@@ -189,7 +189,7 @@ namespace FubukiMods.Modules {
 				BaseSkins = Ext.NewEmpty<SkinDef>(),
 				GameObjectActivations = Ext.NewEmpty<SkinDef.GameObjectActivation>(),
 				RendererInfos = new CharacterModel.RendererInfo[] {
-					// TODO: Do I actually have to create these?
+					// TODO: Do I actually have to create these? Can I copy them from the vanilla reaver?
 					new CharacterModel.RendererInfo {
 						defaultMaterial = renderers[0].material,
 						defaultShadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On,

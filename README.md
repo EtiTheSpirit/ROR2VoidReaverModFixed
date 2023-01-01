@@ -18,7 +18,6 @@ An expansion upon [LuaFubuki's Void Reaver Mod](https://thunderstore.io/package/
 ## Known Bugs / To-Do List (Fixes)
 * There are no currently known bugs.
 * I am looking into the preview model (pre-game screen) being in the falling animation, I would like to fix this.
-* I may implement a stronger variant of Pulverized that subtracts more armor for Reave, the amount being configurable.
 
 ## Special Thanks To...
 * **LuaFubuki**, for open sourcing the mod.
@@ -26,6 +25,22 @@ An expansion upon [LuaFubuki's Void Reaver Mod](https://thunderstore.io/package/
 * **ROR2 Modding Discord** for making sure I was stumbling around the game's codebase in what is *mostly* the correct direction (also shoutouts for being an incredibly patient community of modders!)
 
 # Changelogs
+
+## 2.0.7
+#### Get the heck out of my room I'm modding Minecraft now. Oh and I broke your config files again (at least, the special part, see section 6 of the config file).
+
+### New Features
+* **A terminology change was done for the two Special abilities. "Reave" (the weak, not dying one) was renamed to "Detain", and "Collapse" (the strong, very dying one) was renamed to "Reave".** This clears up the accidental ambiguity between the Collapse *status effect* (from Needletick) vs. the ability. It's thematically a bit better anyway, to be honest. This is what broke config files, because the respective entries have been renamed as well.
+* Added a new status effect dedicated for using Detain that reduces armor by a configurable amount.
+* added [farding](https://thunderstore.io/package/FungoLungo/VoidFartReverb/)
+
+### Changes
+* Increased the default configuration value for Detain damage (from 5,000% to 10,000%) to account for its low late game damage.
+* Reverted the default configuration value for Reave damage (from 30,000% to 75,000%) to account for its low late game damage.
+* The duration of Detain/Reave has been increased to 3 seconds (from 2.5) so that it matches the vanilla effect.
+
+### Fixes
+* Interrupting Undertow with another ability (like Dive) no longer eats your stock.
 
 ## 2.0.6
 #### In all fairness, it *was* pretty OP.

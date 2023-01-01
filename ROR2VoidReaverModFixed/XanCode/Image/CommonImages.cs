@@ -14,6 +14,7 @@ namespace ROR2VoidReaverModFixed.XanCode.Image {
 		public static Sprite UtilityIcon => Configuration.UseNewIcons ? ModernImages.UtilityIcon : LegacyImages.UtilityIcon;
 		public static Sprite SpecialWeakIcon => Configuration.UseNewIcons ? ModernImages.SpecialWeakIcon : LegacyImages.SpecialWeakIcon;
 		public static Sprite SpecialSuicideIcon => Configuration.UseNewIcons ? ModernImages.SpecialSuicideIcon : LegacyImages.SpecialSuicideIcon;
+		public static Sprite SpecialDebuffIcon => ModernImages.SpecialDebuffIcon;
 		public static Sprite DefaultSkinIcon => ModernImages.DefaultSkinIcon;
 
 	}

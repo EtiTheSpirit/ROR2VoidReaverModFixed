@@ -9,11 +9,13 @@ using XanVoidReaverEdit;
 using ROR2VoidReaverModFixed.XanCode;
 using ROR2VoidReaverModFixed.XanCode.Data;
 using RoR2;
-using ROR2VoidReaverModFixed.XanCode.ILPatches;
+using BepInEx.Bootstrap;
 
 namespace FubukiMods {
 	[
 		BepInDependency(R2API.R2API.PluginGUID),
+		BepInDependency("Fokoloti.VoidFartReverb", BepInDependency.DependencyFlags.SoftDependency),
+		BepInDependency("com.xoxfaby.BetterUI", BepInDependency.DependencyFlags.SoftDependency),
 		R2APISubmoduleDependency(nameof(PrefabAPI), nameof(LoadoutAPI), nameof(LanguageAPI), nameof(DamageAPI)),
 		NetworkCompatibility
 	]
@@ -22,7 +24,13 @@ namespace FubukiMods {
 
 		public const string PLUGIN_GUID = "Xan.VoidReaverPlayerCharacter";
 		public const string DISPLAY_NAME = "Void Reaver Survivor (Xan's Edit)";
-		public const string VERSION = "2.0.5";
+		public const string VERSION = "2.0.7";
+
+		/// <summary>
+		/// Set this to true to stub the Steam network management event, allowing two clients running on the same computer (and thus Steam account)
+		/// to connect to eachother.
+		/// </summary>
+		private const bool USE_STEAM_CLIENT_STUBBER_LOCALTEST = false;
 
 		void Awake() {
 			Log.Init(Logger);
@@ -32,7 +40,12 @@ namespace FubukiMods {
 			Lang.Init();
 			// VoidShieldColorizer.Init();
 
-			// On.RoR2.Networking.NetworkManagerSystemSteam.OnClientConnect += (s, u, t) => { };
+#pragma warning disable IDE0035, CS0162
+			if (USE_STEAM_CLIENT_STUBBER_LOCALTEST) {
+				Log.LogError("Steam Network Client Connection Event has been stubbed. This will break multiplayer in production environments! If you are using a release build of this mod and you are seeing this message, report this issue immediately!");
+				On.RoR2.Networking.NetworkManagerSystemSteam.OnClientConnect += (_, _, _) => { };
+			}
+#pragma warning restore IDE0035, CS0162
 
 			PrimaryProjectile = PrefabAPI.InstantiateClone(Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarSkillReplacements/LunarNeedleProjectile.prefab").WaitForCompletion(), "VoidPrimaryAttack", true);
 			if (Configuration.UseFullSizeCharacter) {
@@ -65,36 +78,36 @@ namespace FubukiMods {
 			ContentAddition.AddProjectile(SecondaryProjectile);
 			Log.LogTrace("Registered secondary projectile");
 
-			ReaveProjectile = PrefabAPI.InstantiateClone(Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Nullifier/NullifierDeathBombProjectile.prefab").WaitForCompletion(), "VoidSpecialAttack", true);
-			ProjectileDamage reaveDamage = ReaveProjectile.GetComponent<ProjectileDamage>();
-			ProjectileExplosion reaveBaseExplosion = ReaveProjectile.GetComponent<ProjectileExplosion>();
-			ProjectileImpactExplosion reaveImpactExplosion = ReaveProjectile.GetComponent<ProjectileImpactExplosion>();
-			reaveBaseExplosion.blastAttackerFiltering = AttackerFiltering.NeverHitSelf;
-			reaveBaseExplosion.blastDamageCoefficient = 1f;
-			reaveBaseExplosion.blastProcCoefficient = 1f;
-			reaveBaseExplosion.totalDamageMultiplier = 1f;
-			reaveBaseExplosion.falloffModel = BlastAttack.FalloffModel.None;
+			DetainProjectile = PrefabAPI.InstantiateClone(Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Nullifier/NullifierDeathBombProjectile.prefab").WaitForCompletion(), "VoidSpecialAttack", true);
+			ProjectileDamage detainDamage = DetainProjectile.GetComponent<ProjectileDamage>();
+			ProjectileExplosion detainBaseExplosion = DetainProjectile.GetComponent<ProjectileExplosion>();
+			ProjectileImpactExplosion detainImpactExplosion = DetainProjectile.GetComponent<ProjectileImpactExplosion>();
+			detainBaseExplosion.blastAttackerFiltering = AttackerFiltering.NeverHitSelf;
+			detainBaseExplosion.blastDamageCoefficient = 1f;
+			detainBaseExplosion.blastProcCoefficient = 1f;
+			detainBaseExplosion.totalDamageMultiplier = 1f;
+			detainBaseExplosion.falloffModel = BlastAttack.FalloffModel.None;
 			if (Configuration.UseFullSizeCharacter) {
 				// We ARE using full size character
-				reaveBaseExplosion.blastRadius *= 1.25f;
+				detainBaseExplosion.blastRadius *= 1.25f;
 			}
-			reaveDamage.damage = 1f;
-			reaveDamage.damageColorIndex = DamageColorIndex.Void;
-			reaveDamage.damageType = DamageType.BypassArmor | DamageType.BypassBlock | DamageType.BypassOneShotProtection; // Do NOT include VoidDeath on reave!!!
-			reaveImpactExplosion.lifetime = XanConstants.REAVER_DEATH_DURATION;
-			reaveImpactExplosion.falloffModel = BlastAttack.FalloffModel.None;
-			ReaveProjectile.AddComponent<DamageAPI.ModdedDamageTypeHolderComponent>().Add(XanConstants.ReaveOrCollapse);
-			ContentAddition.AddProjectile(ReaveProjectile);
-			Log.LogTrace("Registered Reave death projectile and custom its damage type.");
+			detainDamage.damage = 1f;
+			detainDamage.damageColorIndex = DamageColorIndex.Void;
+			detainDamage.damageType = DamageType.BypassArmor | DamageType.BypassBlock | DamageType.BypassOneShotProtection; // Do NOT include VoidDeath on this!!!
+			detainImpactExplosion.lifetime = XanConstants.REAVER_DEATH_DURATION;
+			detainImpactExplosion.falloffModel = BlastAttack.FalloffModel.None;
+			DetainProjectile.AddComponent<DamageAPI.ModdedDamageTypeHolderComponent>().Add(XanConstants.DetainorReaveDamage);
+			ContentAddition.AddProjectile(DetainProjectile);
+			Log.LogTrace("Registered Detain projectile and custom its damage type.");
 
-			InstakillReaveProjectile = PrefabAPI.InstantiateClone(ReaveProjectile, "VoidSpecialAttackInstakill", true);
+			InstakillReaveProjectile = PrefabAPI.InstantiateClone(DetainProjectile, "VoidSpecialAttackInstakill", true);
 			// DO include VoidDeath on this one though
 			ProjectileDamage collapseDamage = InstakillReaveProjectile.GetComponent<ProjectileDamage>();
 			DamageAPI.ModdedDamageTypeHolderComponent collapseModDamageTypeHolder = InstakillReaveProjectile.GetComponent<DamageAPI.ModdedDamageTypeHolderComponent>();
 			collapseDamage.damageType |= DamageType.VoidDeath;
-			collapseModDamageTypeHolder.Add(XanConstants.VoidCollapse);
+			collapseModDamageTypeHolder.Add(XanConstants.ReaveDamage);
 			ContentAddition.AddProjectile(InstakillReaveProjectile);
-			Log.LogTrace("Registered Reave death projectile and custom its damage type (except this time its the one that really hurts).");
+			Log.LogTrace("Registered Reave projectile and custom its damage type (except this time its the one that really hurts).");
 
 			Survivors.Init(this);
 		}
@@ -112,7 +125,7 @@ namespace FubukiMods {
 		/// <summary>
 		/// A projectile that spawns the reaver death effect.
 		/// </summary>
-		public static GameObject ReaveProjectile { get; private set; }
+		public static GameObject DetainProjectile { get; private set; }
 
 		/// <summary>
 		/// A projectile that spawns the reaver death effect, except this one hurts really bad.

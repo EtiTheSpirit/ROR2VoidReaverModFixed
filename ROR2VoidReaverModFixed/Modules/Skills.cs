@@ -9,6 +9,7 @@ using RoR2;
 using RoR2.Projectile;
 using ROR2VoidReaverModFixed.XanCode;
 using ROR2VoidReaverModFixed.XanCode.Data;
+using ROR2VoidReaverModFixed.XanCode.Interop;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -21,7 +22,7 @@ namespace FubukiMods.Modules {
 
 	/// <summary>
 	/// This class contains all skill information. It was originally written by LuaFubuki but has been
-	/// practically rewritten by Xan.
+	/// mostly rewritten by Xan.
 	/// </summary>
 	public static class Skills {
 
@@ -29,8 +30,7 @@ namespace FubukiMods.Modules {
 
 #pragma warning disable Publicizer001
 		/// <summary>
-		/// Code originally defined by LuaFubuki, but turned into a function by Xan.<br/>
-		/// Constructs a <see cref="FireProjectileInfo"/> that represents the Reaver's primary attack.
+		/// Code originally defined by LuaFubuki, but turned into a function by Xan. Constructs a <see cref="FireProjectileInfo"/> that represents the Reaver's primary attack.
 		/// </summary>
 		/// <param name="aimRay">The ray representing the projectile's aim.</param>
 		/// <param name="commonVoidPrimary">The common base class for the two variations of the primary attack.</param>
@@ -282,6 +282,11 @@ namespace FubukiMods.Modules {
 			/// </summary>
 			private GameObject _areaSphere;
 
+			/// <summary>
+			/// True if the ability fired. This is checked in the exit state code. It is only valid on the authority.
+			/// </summary>
+			private bool _lastFired;
+
 			public override void OnEnter() {
 				base.OnEnter();
 				_realRandRadius = BASE_RAND_RADIUS * (0.75f + attackSpeedStat * 0.25f);
@@ -289,13 +294,15 @@ namespace FubukiMods.Modules {
 				if (isAuthority) {
 					_areaSphere = Object.Instantiate(ArrowRain.areaIndicatorPrefab);
 					_areaSphere.transform.localScale = Vector3.one * _realRandRadius;
+					_lastFired = false;
+					skillLocator.secondary.DeductStock(1);
+					Log.LogMessage("Deducted one stock from Undertow.");
 				}
 				Util.PlaySound(sfxLocator.barkSound, gameObject);
 			}
 
 			public override void Update() {
 				base.Update();
-				bool isAuthority = base.isAuthority;
 				if (isAuthority) {
 					LayerMask hitMask = LayerIndex.world.mask | LayerIndex.enemyBody.mask;
 					bool hit = Physics.Raycast(GetAimRay(), out RaycastHit castResult, MAX_AIM_DISTANCE, hitMask);
@@ -313,10 +320,11 @@ namespace FubukiMods.Modules {
 				base.FixedUpdate();
 				bool hasReleasedKey = isAuthority && !inputBank.skill2.down;
 				if (hasReleasedKey) {
+					Ray aimRay = GetAimRay();
+					bool hit = Physics.Raycast(aimRay, out RaycastHit castResult, MAX_AIM_DISTANCE);
 					if (isAuthority) {
-						Ray aimRay = GetAimRay();
-						bool hit = Physics.Raycast(aimRay, out RaycastHit castResult, MAX_AIM_DISTANCE);
 						if (hit) {
+							// To future Xan: Do not use CanExecute() because that checks if it is not in use (which, if this method is running, it is)
 							for (int i = 0; i < _realBombCount; i++) {
 								Vector3 randomDirection = Random.insideUnitSphere * _realRandRadius;
 								randomDirection.y = 0f;
@@ -344,20 +352,33 @@ namespace FubukiMods.Modules {
 									DamageColorIndex.Void
 								);
 							}
-						} else {
-							skillLocator.secondary.stock++;
 						}
 						outer.SetNextStateToMain();
 					}
+
+					if (hit) {
+						_lastFired = _realBombCount > 0;
+					} else {
+						_lastFired = false;
+					}
+					Log.LogMessage("Undertow reports _lastFired=" + _lastFired.ToString().ToLower());
 				}
 			}
 
 			public override void OnExit() {
 				if (isAuthority) {
 					Destroy(_areaSphere.gameObject);
+					if (!_lastFired) {
+						skillLocator.secondary.DeductStock(1);
+						skillLocator.secondary.rechargeStopwatch = skillLocator.secondary.CalculateFinalRechargeInterval();
+						Log.LogMessage("Undertow added one stock back because _lastFired was false.");
+					}
 				}
-				EffectManager.SimpleMuzzleFlash(FirePortalBomb.muzzleflashEffectPrefab, gameObject, FirePortalBomb.muzzleString, true);
-				base.OnExit();
+				if (_lastFired) {
+					EffectManager.SimpleMuzzleFlash(FirePortalBomb.muzzleflashEffectPrefab, gameObject, FirePortalBomb.muzzleString, true);
+					_lastFired = false;
+				}
+;
 			}
 
 			public override InterruptPriority GetMinimumInterruptPriority() {
@@ -366,7 +387,7 @@ namespace FubukiMods.Modules {
 		}
 
 		/// <summary>
-		/// The "Dive" ability. This makes the player invisible, moves them in a predetermined direction based on either their movement
+		/// The "Dive" ability. This makes the player invisible, moves them in a predetermined direction based on either their movement or look direction if they are not moving.
 		/// </summary>
 		public class VoidUtility : BaseState {
 
@@ -396,6 +417,11 @@ namespace FubukiMods.Modules {
 				// By forcing the character to align with the camera just before activating this, they will now move in the direction of their camera, which
 				// feels more natural to the average joe.
 				StartAimMode(Time.fixedDeltaTime, true);
+
+				// Bugfix: Holding down (but not releasing) RMB will still "fire" the secondary and put it on cooldown.
+				if (inputBank.skill2.down) {
+					skillLocator.secondary.stock++;
+				}
 
 				EffectManager.SpawnEffect(GenericCharacterDeath.voidDeathEffect, new EffectData {
 					origin = characterBody.corePosition,
@@ -485,6 +511,8 @@ namespace FubukiMods.Modules {
 
 			public override void OnEnter() {
 				base.OnEnter();
+				VoidFartReverb.FartWithReverb(characterBody);
+
 				damageStat = characterBody.damage;
 				_zoomOutParams = default;
 				_zoomOutParams.cameraParamsData.idealLocalCameraPos = new Vector3(0f, 1f, -30f);
@@ -496,14 +524,14 @@ namespace FubukiMods.Modules {
 				if (NetworkServer.active && muzzleTransform != null) {
 					ProjectileManager.instance.FireProjectile(GetVoidExplosionFireInfo(
 						this, 
-						MainPlugin.ReaveProjectile, 
+						MainPlugin.DetainProjectile, 
 						muzzleTransform,
 						Configuration.BaseSpecialDamage
 					));
 				} else if (muzzleTransform == null) {
 					Log.LogError("WARNING: Failed to execute Reave ability! The character does not have a muzzle transform. Were you deleted or something? You good? Did the furries read \"muzzle\" and steal it for their diabolical activities (if so then lmao also L)?");
 				}
-				if (Configuration.ReaveImmunity) {
+				if (Configuration.DetainImmunity) {
 					HurtBoxGroup component = GetModelTransform().GetComponent<HurtBoxGroup>();
 					component.hurtBoxesDeactivatorCounter++;
 				}
@@ -514,7 +542,7 @@ namespace FubukiMods.Modules {
 				if (isEndOfEffect) {
 					if (!_hasCreatedVoidPortalEffect) {
 						_hasCreatedVoidPortalEffect = true;
-						float selfDamage = healthComponent.combinedHealth * Configuration.ReaveCost;
+						float selfDamage = healthComponent.combinedHealth * Configuration.DetainCost;
 						if (NetworkServer.active && selfDamage > 0) {
 							DamageInfo dmg = new DamageInfo {
 								//attacker = gameObject,
@@ -544,12 +572,12 @@ namespace FubukiMods.Modules {
 					origin = characterBody.corePosition,
 					scale = scale
 				}, false);
-				if (Configuration.ReaveImmunity) {
+				if (Configuration.DetainImmunity) {
 					HurtBoxGroup component = GetModelTransform().GetComponent<HurtBoxGroup>();
 					component.hurtBoxesDeactivatorCounter--;
 				}
-				if (Configuration.ReaveWeaknessDuration > 0 && NetworkServer.active) {
-					characterBody.AddTimedBuff(RoR2Content.Buffs.Pulverized, Configuration.ReaveWeaknessDuration);
+				if (Configuration.DetainWeaknessDuration > 0 && Configuration.DetainWeaknessArmorReduction != 0 && NetworkServer.active) {
+					characterBody.AddTimedBuff(XanConstants.DetainInstability, Configuration.DetainWeaknessDuration);
 				}
 				base.OnExit();
 			}
@@ -595,8 +623,6 @@ namespace FubukiMods.Modules {
 			private GameObject _cachedGameObject;
 			private bool _hasDeleted = false;
 
-
-
 			/// <summary>
 			/// This controls the zoom effect when looking at the black hole.
 			/// </summary>
@@ -608,6 +634,8 @@ namespace FubukiMods.Modules {
 			private CameraTargetParams.CameraParamsOverrideHandle _zoomOutHandle;
 
 			public override void OnEnter() {
+				VoidFartReverb.FartWithReverb(characterBody);
+
 				damageStat = characterBody.damage;
 				_isPlayerDeath = characterBody.master != null && characterBody.master.GetComponent<PlayerCharacterMasterController>() != null;
 				_cachedModelTransform = characterBody.gameObject.GetComponent<ModelLocator>().modelTransform;
@@ -617,7 +645,6 @@ namespace FubukiMods.Modules {
 				_zoomOutParams.cameraParamsData.idealLocalCameraPos = new Vector3(0f, 1f, -30f);
 				_zoomOutParams.cameraParamsData.pivotVerticalOffset = 0f;
 				_zoomOutHandle = GetComponent<CameraTargetParams>().AddParamsOverride(_zoomOutParams, 2f);
-
 				PlayCrossfade("Body", "Death", "Death.playbackRate", XanConstants.REAVER_DEATH_DURATION, 0.1f);
 				if (isAuthority) {
 					Transform muzzleTransform = FindModelChild(DeathState.muzzleName).Or(gameObject.transform);
@@ -662,7 +689,6 @@ namespace FubukiMods.Modules {
 			public override void OnExit() { }
 
 #pragma warning disable Publicizer001
-#pragma warning disable IDE0031 // Simplify null check with a?.b(); (this does not (necessarily) work on unity objects)
 			protected void DeleteReplicatedModel() {
 				if (_cachedModelTransform != null) {
 					_cachedModelTransform.gameObject.Destroy();
@@ -673,7 +699,6 @@ namespace FubukiMods.Modules {
 					}
 				}
 			}
-#pragma warning restore IDE0031
 #pragma warning restore Publicizer001
 
 			public override InterruptPriority GetMinimumInterruptPriority() => InterruptPriority.Death;

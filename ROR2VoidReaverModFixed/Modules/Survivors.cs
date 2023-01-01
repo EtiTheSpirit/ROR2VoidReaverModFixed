@@ -163,7 +163,7 @@ namespace FubukiMods.Modules {
 			undertowSecondary.beginSkillCooldownOnSkillEnd = true;
 			undertowSecondary.canceledFromSprinting = true;
 			undertowSecondary.cancelSprintingOnActivation = true;
-			undertowSecondary.dontAllowPastMaxStocks = false;
+			undertowSecondary.dontAllowPastMaxStocks = true;
 			undertowSecondary.forceSprintDuringState = false;
 			undertowSecondary.fullRestockOnAssign = true;
 			undertowSecondary.interruptPriority = InterruptPriority.Skill;
@@ -171,7 +171,7 @@ namespace FubukiMods.Modules {
 			undertowSecondary.mustKeyPress = true;
 			undertowSecondary.rechargeStock = undertowSecondary.baseMaxStock;
 			undertowSecondary.requiredStock = 1;
-			undertowSecondary.stockToConsume = 1;
+			undertowSecondary.stockToConsume = 0;
 			undertowSecondary.skillNameToken = Lang.SKILL_SECONDARY_NAME;
 			undertowSecondary.skillDescriptionToken = Lang.SKILL_SECONDARY_DESC;
 			undertowSecondary.icon = CommonImages.SecondaryIcon;
@@ -259,6 +259,7 @@ namespace FubukiMods.Modules {
 			survivorDef.descriptionToken = Lang.SURVIVOR_DESC;
 			survivorDef.displayNameToken = Lang.SURVIVOR_NAME;
 			survivorDef.outroFlavorToken = Lang.SURVIVOR_OUTRO;
+			survivorDef.mainEndingEscapeFailureFlavorToken = Lang.SURVIVOR_OUTRO_FAILED;
 			survivorDef.displayPrefab = playerBodyLocator;
 			survivorDef.displayPrefab.transform.localScale = Vector3.one * 0.3f;
 			survivorDef.primaryColor = new Color(0.5f, 0.5f, 0.5f);
@@ -288,6 +289,9 @@ namespace FubukiMods.Modules {
 			On.EntityStates.BaseCharacterMain.UpdateAnimationParameters += OnAnimationParametersUpdated;
 			On.RoR2.CameraRigController.GenerateCameraModeContext += OnGeneratingCameraModeContext;
 
+			Log.LogTrace("Adding custom armor reduction effect.");
+			On.RoR2.CharacterBody.RecalculateStats += InterceptRecalculateStats;
+
 			BodyCatalog.availability.CallWhenAvailable(() => {
 				Registry.RegisterColorProvider(plugin, body.bodyIndex, new HPBarColorMarshaller());
 				Log.LogTrace("Custom Void-Style HP Bar colors registered.");
@@ -296,13 +300,12 @@ namespace FubukiMods.Modules {
 			Log.LogTrace("Survivor setup completed.");
 		}
 
-
 #pragma warning disable Publicizer001
 
 		private static void BeforeDispatchingProjectileInit(On.RoR2.Projectile.ProjectileController.orig_DispatchOnInitialized originalMethod, ProjectileController @this) {
 			DamageAPI.ModdedDamageTypeHolderComponent dmg = @this.gameObject.GetComponent<DamageAPI.ModdedDamageTypeHolderComponent>();
-			if (dmg != null && dmg.Has(XanConstants.ReaveOrCollapse)) {
-				Log.LogTrace("A projectile with Collapse was created. Setting its team to none.");
+			if (dmg != null && dmg.Has(XanConstants.DetainorReaveDamage)) {
+				Log.LogTrace("A projectile with Reave was created. Setting its team to none.");
 				TeamFilter filter = @this.gameObject.AddComponent<TeamFilter>();
 				filter.teamIndex = TeamIndex.Neutral;
 				@this.teamFilter = filter;
@@ -326,7 +329,7 @@ namespace FubukiMods.Modules {
 
 			// Now instakill will be handled by another callback in this code (see InterceptTakeDamageForInstakill).
 			// We just need to handle death effects.
-			if (damageInfo.HasModdedDamageType(XanConstants.ReaveOrCollapse)) {
+			if (damageInfo.HasModdedDamageType(XanConstants.DetainorReaveDamage)) {
 
 				// Real quick:
 				Log.LogTrace("Set proc coefficient to 0.");
@@ -345,7 +348,7 @@ namespace FubukiMods.Modules {
 					}
 
 					if (Configuration.ExaggeratedReaveAndCollapse) {
-						Log.LogTrace("Exaggerated reave/collapse deaths are on. Spawning the special effect (if possible).");
+						Log.LogTrace("Exaggerated detain/reave deaths are on. Spawning the special effect (if possible).");
 						// Spawn the cool VFX if the user opted into that.
 						Vector3 pos = @this.body.corePosition;
 						float radius = @this.body.bestFitRadius;
@@ -413,8 +416,8 @@ namespace FubukiMods.Modules {
 			@this.targetBody._isSprinting = originalSprinting;
 		}
 
-		private static void OnModelLocatorAwakened(On.RoR2.ModelLocator.orig_Awake orig, ModelLocator @this) {
-			orig(@this);
+		private static void OnModelLocatorAwakened(On.RoR2.ModelLocator.orig_Awake originalMethod, ModelLocator @this) {
+			originalMethod(@this);
 
 			CharacterBody body = @this.GetComponent<CharacterBody>();
 			if (body != null) {
@@ -437,7 +440,7 @@ namespace FubukiMods.Modules {
 				return;
 			}
 
-			if (damageInfo.HasModdedDamageType(XanConstants.VoidCollapse)) {
+			if (damageInfo.HasModdedDamageType(XanConstants.ReaveDamage)) {
 				bool isBoss = @this.body.isBoss;
 				bool canInstakill = (!isBoss) || (isBoss && Configuration.AllowInstakillOnBosses);
 				// canInstakill if:
@@ -459,9 +462,9 @@ namespace FubukiMods.Modules {
 			originalMethod(@this, damageInfo);
 		}
 
-		private static void InterceptTakeDamageForVoidResist(On.RoR2.HealthComponent.orig_TakeDamage orig, HealthComponent @this, DamageInfo damageInfo) {
+		private static void InterceptTakeDamageForVoidResist(On.RoR2.HealthComponent.orig_TakeDamage originalMethod, HealthComponent @this, DamageInfo damageInfo) {
 			if (damageInfo.rejected) {
-				orig(@this, damageInfo);
+				originalMethod(@this, damageInfo);
 				return;
 			}
 
@@ -472,20 +475,28 @@ namespace FubukiMods.Modules {
 				}
 			}
 
-			orig(@this, damageInfo);
+			originalMethod(@this, damageInfo);
 		}
 
-		private static void InterceptBuffsEvent(On.RoR2.CharacterBody.orig_SetBuffCount orig, CharacterBody @this, BuffIndex buffType, int newCount) {
+		private static void InterceptBuffsEvent(On.RoR2.CharacterBody.orig_SetBuffCount originalMethod, CharacterBody @this, BuffIndex buffType, int newCount) {
 			if (@this.baseNameToken == Lang.SURVIVOR_NAME) {
 				if (buffType == MegaVoidFog || buffType == NormVoidFog || buffType == WeakVoidFog) {
 					Log.LogTrace("Rejecting attempt to add fog to player's status effects.");
-					orig(@this, buffType, 0); // Always 0
+					originalMethod(@this, buffType, 0); // Always 0
 					return;
 				}
 			}
 
-			orig(@this, buffType, newCount);
+			originalMethod(@this, buffType, newCount);
 		}
+
+		private static void InterceptRecalculateStats(On.RoR2.CharacterBody.orig_RecalculateStats originalMethod, CharacterBody @this) {
+			originalMethod(@this);
+			if (@this.HasBuff(XanConstants.DetainInstability)) {
+				@this.armor -= Configuration.DetainWeaknessArmorReduction;
+			}
+		}
+
 #pragma warning restore Publicizer001
 
 		#region Values To Remember

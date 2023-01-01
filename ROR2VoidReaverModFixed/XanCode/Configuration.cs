@@ -157,6 +157,11 @@ namespace ROR2VoidReaverModFixed.XanCode {
 		/// </summary>
 		public static bool ReaveAndCollapseFriendlyFire => _collapseFriendlyFire.Value;
 
+		/// <summary>
+		/// The amount of armor subtracted from a character's stats when they have Void Rift Shock
+		/// </summary>
+		public static int DetainWeaknessArmorReduction => _reaveWeaknessArmorReductionConstant.Value;
+
 		#region Reave
 
 		/// <summary>
@@ -167,17 +172,17 @@ namespace ROR2VoidReaverModFixed.XanCode {
 		/// <summary>
 		/// The amount of health the player must spend to perform Reave.
 		/// </summary>
-		public static float ReaveCost => _reaveHealthCostPercent.Value;
+		public static float DetainCost => _reaveHealthCostPercent.Value;
 
 		/// <summary>
 		/// If true, the player cannot take damage whilst performing their Reave special.
 		/// </summary>
-		public static bool ReaveImmunity => _reaveImmunity.Value;
+		public static bool DetainImmunity => _reaveImmunity.Value;
 
 		/// <summary>
 		/// If larger than zero, the player is inflicted with negative armor for a brief time after using Reave.
 		/// </summary>
-		public static float ReaveWeaknessDuration => _reaveWeaknessDuration.Value;
+		public static float DetainWeaknessDuration => _reaveWeaknessDuration.Value;
 		#endregion
 
 		#region Collapse
@@ -307,6 +312,7 @@ namespace ROR2VoidReaverModFixed.XanCode {
 		private static ConfigEntry<float> _reaveHealthCostPercent;
 		private static ConfigEntry<bool> _reaveImmunity;
 		private static ConfigEntry<float> _reaveWeaknessDuration;
+		private static ConfigEntry<int> _reaveWeaknessArmorReductionConstant;
 		#endregion
 
 		#region Collapse
@@ -422,14 +428,16 @@ namespace ROR2VoidReaverModFixed.XanCode {
 			_utilityRegen = Bind("3c. Character Utility", "Dive Regeneration", 0.15f, StaticDeclareConfigDescription("The percentage of health you regenerate when using Dive.", new AcceptableValueRange<float>(0, 1)));
 			_utilityDuration = Bind("3c. Character Utility", "Dive Duration", 1f, StaticDeclareConfigDescription("The amount of time, in seconds, that Dive hides and moves the player for.", new AcceptableMinimum<float>()));
 
-			_baseSpecialDamage = Bind("3d. Character Special", "Base Reave Damage", 50f, StaticDeclareConfigDescription(string.Format(FMT_DEFAULT, "special attack damage output") + " Note that this does not apply to the death effect. As such, this strictly affects the \"Reave\" ability.", new AcceptableMinimum<float>()));
-			_reaveCooldown = Bind("3d. Character Special", "Reave Cooldown", 30f, StaticDeclareConfigDescription("The amount of time, in seconds, that the player must wait before one stock of their special recharges.", new AcceptableMinimum<float>()));
-			_reaveHealthCostPercent = Bind("3d. Character Special", "Reave Cost", 0.5f, StaticDeclareConfigDescription("This is the percentage of your current health that will be taken from you after you perform the \"Reave\" special.", new AcceptableValueRange<float>(0f, 0.99f)));
-			_reaveImmunity = Bind("3d. Character Special", "Reave Protection", true, "While performing the \"Reave\" special, and if this is true, you will not be able to take damage while locked in the animation.");
-			_reaveWeaknessDuration = Bind("3d. Character Special", "Reave Weakness Duration", 10f, StaticDeclareConfigDescription("After performing the \"Reave\" special, and if this is not zero, you will be inflicted with the Pulverized status effect for this many seconds. This status effect causes you to take more damage.", new AcceptableMinimum<float>()));
-			_baseDeathDamage = Bind("3d. Character Special", "Collapse Damage", 300f, StaticDeclareConfigDescription("The amount of damage that the \"Collapse\" special does to enemies within. This value is multiplied by the base damage of the character.", new AcceptableMinimum<float>()));
-			_collapseInstakill = Bind("3d. Character Special", "Collapse Can Instakill", true, "If true, Collapse will instantly kill any enemy, making it behave identically to that of vanilla Void Reavers. It is strongly recommended to leave this enabled.");
-			_collapseInstakillAffectBoss = Bind("3d. Character Special", "Collapse Instakill Affects Bosses", false, "If Collapse Instakill is enabled, this determines whether or not it can affect bosses. Setting this to false is recommended so that runs aren't completely thrown.");
+			_baseSpecialDamage = Bind("3d. Character Special", "Base Detain Damage", 100f, StaticDeclareConfigDescription(string.Format(FMT_DEFAULT, "special attack damage output") + " Note that this does not apply to the death effect. As such, this strictly affects the \"Reave\" ability.", new AcceptableMinimum<float>()));
+			_reaveCooldown = Bind("3d. Character Special", "Detain Cooldown", 30f, StaticDeclareConfigDescription("The amount of time, in seconds, that the player must wait before one stock of their special recharges.", new AcceptableMinimum<float>()));
+			_reaveHealthCostPercent = Bind("3d. Character Special", "Detain Cost", 0.5f, StaticDeclareConfigDescription("This is the percentage of your current health that will be taken from you after you perform the \"Reave\" special.", new AcceptableValueRange<float>(0f, 0.99f)));
+			_reaveImmunity = Bind("3d. Character Special", "Detain Protection", true, "While performing the \"Reave\" special, and if this is true, you will not be able to take damage while locked in the animation.");
+			_reaveWeaknessDuration = Bind("3d. Character Special", "Detain Weakness Duration", 10f, StaticDeclareConfigDescription("After performing the \"Reave\" special, and if this is not zero, you will be inflicted with the Void Rift Shock status effect for this many seconds.", new AcceptableMinimum<float>()));
+			_reaveWeaknessArmorReductionConstant = Bind("3d. Character Special", "Detain Weakness Armor Reduction", 100, StaticDeclareConfigDescription("Void Rift Shock operates by reducing the user's armor. The user's armor stat will have this value subtracted from it (inputting a negative value will make it add armor)."));
+			_baseDeathDamage = Bind("3d. Character Special", "Reave Damage", 750f, StaticDeclareConfigDescription("The amount of damage that the \"Collapse\" special does to enemies within. This value is multiplied by the base damage of the character.", new AcceptableMinimum<float>()));
+			_collapseInstakill = Bind("3d. Character Special", "Reave Can Instakill", true, "If true, Collapse will instantly kill any enemy, making it behave identically to that of vanilla Void Reavers. It is strongly recommended to leave this enabled.");
+			_collapseInstakillAffectBoss = Bind("3d. Character Special", "Reave Instakill Affects Bosses", false, "If Collapse Instakill is enabled, this determines whether or not it can affect bosses. Setting this to false is recommended so that runs aren't completely thrown.");
+			
 
 			_baseDamage = Bind("4. Character Combat", "Base Damage", 20f, StaticDeclareConfigDescription(string.Format(FMT_DEFAULT, "damage output") + " Other damage values are multiplied with this.", new AcceptableMinimum<float>()));
 			_levelDamage = Bind("4. Character Combat", "Leveled Damage", 2.4f, StaticDeclareConfigDescription(string.Format(FMT_LEVELED, "damage output") + " Other damage values are multiplied with this.", new AcceptableMinimum<float>()));
@@ -445,7 +453,7 @@ namespace ROR2VoidReaverModFixed.XanCode {
 			_voidImmunity = Bind("5. Void Reaver Specifics", "Void Immunity", true, "If enabled, the player will be immune to damage from a void atmosphere and will not have the fog effect applied to them. **EXPERIMENTAL WARNING** There isn't actually a way to tell if you are taking damage from the void. The way I do it is an educated guess. This means you may actually resist completely valid damage types from some enemies, but I have yet to properly test this.");
 
 			_useNewIcons = Bind("6. Other Options", "Use New Icons", true, "If true, this abandons the old pixel art icons created by LuaFubuki, and replaces them with renders that I made.");
-			_exaggeratedReaveAndCollapse = Bind("6. Other Options", "Exaggerated Reave/Collapse Kills", true, "If enabled, Reave and Collapse have exaggerated kill effects, politely borrowing the effect from the Lost Seer's Lenses.");
+			_exaggeratedReaveAndCollapse = Bind("6. Other Options", "Exaggerated Detain/Reave Kills", true, "If enabled, Reave and Collapse have exaggerated kill effects, politely borrowing the effect from the Lost Seer's Lenses.");
 
 			Log.LogInfo("User configs initialized.");
 		}

@@ -6,6 +6,7 @@ using Unity.Jobs;
 using UnityEngine;
 
 namespace ROR2VoidReaverModFixed.XanCode.Data {
+
 	/// <summary>
 	/// An improvement of R2API's IconTexJob that properly handles the line color.
 	/// </summary>
@@ -38,7 +39,7 @@ namespace ROR2VoidReaverModFixed.XanCode.Data {
 			} else if (num2 < num && num2 > -num) {
 				TexOutput[index] = Right;
 			}
-			if (Math.Abs(Math.Abs(num2) - Math.Abs(num)) <= 4) {
+			if (Math.Abs(Math.Abs(num2) - Math.Abs(num)) <= 8) {
 				TexOutput[index] = Color32.Lerp(TexOutput[index], LINE_FADE, 0.125f);
 			}
 		}

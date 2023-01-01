@@ -15,7 +15,7 @@ namespace ROR2VoidReaverModFixed.XanCode.Image {
 	/// The overhead of this system is not entirely satisfactory as it requires Unity to allocate a Texture2D, and encode the texture from a PNG file.
 	/// It would be ideal if some better format (like DDS) were packed with the application.
 	/// </remarks>
-	public static class ModernImages {
+	internal static class ModernImages {
 
 		private static Stream GetResource(string name) {
 			name = Assembly.GetExecutingAssembly().GetManifestResourceNames().FirstOrDefault(objName => objName.EndsWith(name));
@@ -85,7 +85,7 @@ namespace ROR2VoidReaverModFixed.XanCode.Image {
 		public static Sprite SpecialWeakIcon {
 			get {
 				if (_specialWeakIcon == null) {
-					using (Stream stream = GetResource("Reave.png")) {
+					using (Stream stream = GetResource("Detain.png")) {
 						_specialWeakIcon = ImageHelper.CreateSprite(stream);
 					}
 				}
@@ -97,7 +97,7 @@ namespace ROR2VoidReaverModFixed.XanCode.Image {
 		public static Sprite SpecialSuicideIcon {
 			get {
 				if (_specialSuicideIcon == null) {
-					using (Stream stream = GetResource("Collapse.png")) {
+					using (Stream stream = GetResource("Reave.png")) {
 						_specialSuicideIcon = ImageHelper.CreateSprite(stream);
 					}
 				}
@@ -105,6 +105,18 @@ namespace ROR2VoidReaverModFixed.XanCode.Image {
 			}
 		}
 		private static Sprite _specialSuicideIcon = null;
+
+		public static Sprite SpecialDebuffIcon {
+			get {
+				if (_specialDebuffIcon == null) {
+					using (Stream stream = GetResource("Debuff.png")) {
+						_specialDebuffIcon = ImageHelper.CreateSprite(stream);
+					}
+				}
+				return _specialDebuffIcon;
+			}
+		}
+		private static Sprite _specialDebuffIcon = null;
 
 		public static Sprite DefaultSkinIcon {
 			get {

@@ -9,7 +9,7 @@ namespace ROR2VoidReaverModFixed.XanCode.Image {
 	/// This has been kept for the sake of user preferences, so that the replacements in <see cref="ModernImages"/> can be disabled
 	/// for those who choose to make such a change.
 	/// </summary>
-	public static class LegacyImages {
+	internal static class LegacyImages {
 		private static readonly Color[] PALETTE = new Color[] {
 			new Color(0f, 0f, 0f),
 			new Color(0.3f, 0f, 0.3f),
