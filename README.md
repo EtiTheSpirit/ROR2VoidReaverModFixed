@@ -17,7 +17,6 @@ An expansion upon [LuaFubuki's Void Reaver Mod](https://thunderstore.io/package/
 
 ## Known Bugs / To-Do List (Fixes)
 * There are no currently known bugs.
-* I am looking into the preview model (pre-game screen) being in the falling animation, I would like to fix this.
 
 ## Special Thanks To...
 * **LuaFubuki**, for open sourcing the mod.
@@ -33,6 +32,7 @@ An expansion upon [LuaFubuki's Void Reaver Mod](https://thunderstore.io/package/
 * **A terminology change was done for the two Special abilities. "Reave" (the weak, not dying one) was renamed to "Detain", and "Collapse" (the strong, very dying one) was renamed to "Reave".** This clears up the accidental ambiguity between the Collapse *status effect* (from Needletick) vs. the ability. It's thematically a bit better anyway, to be honest. This is what broke config files, because the respective entries have been renamed as well.
 * Added a new status effect dedicated for using Detain that reduces armor by a configurable amount. This replaces Pulverized.
 * Added a missing message that appears when failing the final stage.
+* Added the missing spawn animation to the character selection screen. This does not spawn the portal due to the size of the effect, but all other parts of the animation are present.
 * added [farding](https://thunderstore.io/package/FungoLungo/VoidFartReverb/)
 
 ### Changes
@@ -42,6 +42,7 @@ An expansion upon [LuaFubuki's Void Reaver Mod](https://thunderstore.io/package/
 
 ### Fixes
 * Interrupting Undertow with another ability (like Dive) no longer eats your stock.
+* Fixed a bug where the preview character was perpetually in its falling animation.
 
 ## 2.0.6
 #### In all fairness, it *was* pretty OP.
