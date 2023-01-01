@@ -105,7 +105,6 @@ namespace FubukiMods.Modules {
 			skillLocator.utility._skillFamily = utilityFamily;
 			skillLocator.special._skillFamily = specialFamily;
 
-
 			return newBody;
 		}
 

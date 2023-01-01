@@ -27,11 +27,12 @@ An expansion upon [LuaFubuki's Void Reaver Mod](https://thunderstore.io/package/
 # Changelogs
 
 ## 2.0.7
-#### Get the heck out of my room I'm modding Minecraft now. Oh and I broke your config files again (at least, the special part, see section 6 of the config file).
+#### Get the heck out of my room I'm modding Minecraft now. Oh and I broke your config files again (at least, the special part, see section 3d of the config file).
 
 ### New Features
 * **A terminology change was done for the two Special abilities. "Reave" (the weak, not dying one) was renamed to "Detain", and "Collapse" (the strong, very dying one) was renamed to "Reave".** This clears up the accidental ambiguity between the Collapse *status effect* (from Needletick) vs. the ability. It's thematically a bit better anyway, to be honest. This is what broke config files, because the respective entries have been renamed as well.
-* Added a new status effect dedicated for using Detain that reduces armor by a configurable amount.
+* Added a new status effect dedicated for using Detain that reduces armor by a configurable amount. This replaces Pulverized.
+* Added a missing message that appears when failing the final stage.
 * added [farding](https://thunderstore.io/package/FungoLungo/VoidFartReverb/)
 
 ### Changes

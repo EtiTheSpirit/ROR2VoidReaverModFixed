@@ -296,9 +296,8 @@ namespace FubukiMods.Modules {
 					_areaSphere.transform.localScale = Vector3.one * _realRandRadius;
 					_lastFired = false;
 					skillLocator.secondary.DeductStock(1);
-					Log.LogMessage("Deducted one stock from Undertow.");
+					Log.LogTrace("Deducted one stock from Undertow.");
 				}
-				Util.PlaySound(sfxLocator.barkSound, gameObject);
 			}
 
 			public override void Update() {
@@ -324,17 +323,16 @@ namespace FubukiMods.Modules {
 					bool hit = Physics.Raycast(aimRay, out RaycastHit castResult, MAX_AIM_DISTANCE);
 					if (isAuthority) {
 						if (hit) {
-							// To future Xan: Do not use CanExecute() because that checks if it is not in use (which, if this method is running, it is)
 							for (int i = 0; i < _realBombCount; i++) {
 								Vector3 randomDirection = Random.insideUnitSphere * _realRandRadius;
 								randomDirection.y = 0f;
 								bool isFirstBomb = i == 0;
 								if (isFirstBomb) {
-									randomDirection = Vector3.zero;
+									randomDirection = Vector3.zero; // This makes at least one of them accurate
 								}
 								Vector3 randomSpread = castResult.point + Vector3.up * _realRandRadius + randomDirection;
 								float randDiameter = _realRandRadius * 2f;
-								LayerMask mask = LayerIndex.world.mask | LayerIndex.entityPrecise.mask;
+								LayerMask mask = LayerIndex.world.mask | LayerIndex.enemyBody.mask;
 								bool hitSpread = Physics.Raycast(randomSpread, Vector3.down, out RaycastHit randomSpreadHit, randDiameter, mask);
 								if (hitSpread) {
 									randomSpread = randomSpreadHit.point;
@@ -361,7 +359,7 @@ namespace FubukiMods.Modules {
 					} else {
 						_lastFired = false;
 					}
-					Log.LogMessage("Undertow reports _lastFired=" + _lastFired.ToString().ToLower());
+					Log.LogTrace("Undertow reports _lastFired=" + _lastFired.ToString().ToLower());
 				}
 			}
 
@@ -371,10 +369,11 @@ namespace FubukiMods.Modules {
 					if (!_lastFired) {
 						skillLocator.secondary.DeductStock(1);
 						skillLocator.secondary.rechargeStopwatch = skillLocator.secondary.CalculateFinalRechargeInterval();
-						Log.LogMessage("Undertow added one stock back because _lastFired was false.");
+						Log.LogTrace("Undertow added one stock back because _lastFired was false.");
 					}
 				}
 				if (_lastFired) {
+					Util.PlaySound(sfxLocator.barkSound, gameObject);
 					EffectManager.SimpleMuzzleFlash(FirePortalBomb.muzzleflashEffectPrefab, gameObject, FirePortalBomb.muzzleString, true);
 					_lastFired = false;
 				}

@@ -4,6 +4,7 @@ using R2API;
 using R2API.Utils;
 using RoR2;
 using RoR2.Projectile;
+using RoR2.UI;
 using ROR2HPBarAPI.API;
 using ROR2VoidReaverModFixed.XanCode;
 using ROR2VoidReaverModFixed.XanCode.Data;
@@ -14,6 +15,7 @@ using UnityEngine.Networking;
 using XanVoidReaverEdit;
 using SerializableEntityStateType = EntityStates.SerializableEntityStateType;
 using SkillDef = RoR2.Skills.SkillDef;
+using NullifierSpawnState = EntityStates.NullifierMonster.SpawnState;
 
 namespace FubukiMods.Modules {
 
@@ -21,13 +23,21 @@ namespace FubukiMods.Modules {
 	/// The survivor main module. This was originally written by LuaFubuki but was rewritten and refactored by Xan.
 	/// </summary>
 	public class Survivors {
+
+		private static SurvivorDef reaver;
+
 		public static void Init(MainPlugin plugin) {
 			GameObject playerBodyPrefab = Tools.CreateBody("PlayerNullifierBody", "RoR2/Base/Nullifier/NullifierBody.prefab");
 			GameObject playerBodyLocator = PrefabAPI.InstantiateClone(playerBodyPrefab.GetComponent<ModelLocator>().modelBaseTransform.gameObject, "PlayerNullifierBodyDisplay");
 			playerBodyLocator.AddComponent<NetworkIdentity>();
 			CharacterBody body = playerBodyPrefab.GetComponent<CharacterBody>();
-
 			Interactor interactor = playerBodyPrefab.GetComponent<Interactor>();
+			
+			/*
+			// Fix the falling animation starting.
+			Animator previewAnimator = playerBodyLocator.transform.Find("mdlNullifier").GetComponent<Animator>();
+			previewAnimator.SetBool("isGrounded", true);
+			*/
 
 			if (Configuration.UseFullSizeCharacter) {
 				Log.LogTrace("Using full size character model. Increasing interaction distance and adding hook to reduce animation speed...");
@@ -264,6 +274,7 @@ namespace FubukiMods.Modules {
 			survivorDef.displayPrefab.transform.localScale = Vector3.one * 0.3f;
 			survivorDef.primaryColor = new Color(0.5f, 0.5f, 0.5f);
 			survivorDef.desiredSortPosition = 44.44f;
+			reaver = survivorDef;
 			ContentAddition.AddSurvivorDef(survivorDef);
 			Log.LogTrace("Finished registering survivor...");
 
@@ -297,9 +308,10 @@ namespace FubukiMods.Modules {
 				Log.LogTrace("Custom Void-Style HP Bar colors registered.");
 			});
 
+			On.RoR2.SurvivorMannequins.SurvivorMannequinSlotController.RebuildMannequinInstance += OnRebuildMannequinInstance;
+
 			Log.LogTrace("Survivor setup completed.");
 		}
-
 #pragma warning disable Publicizer001
 
 		private static void BeforeDispatchingProjectileInit(On.RoR2.Projectile.ProjectileController.orig_DispatchOnInitialized originalMethod, ProjectileController @this) {
@@ -494,6 +506,18 @@ namespace FubukiMods.Modules {
 			originalMethod(@this);
 			if (@this.HasBuff(XanConstants.DetainInstability)) {
 				@this.armor -= Configuration.DetainWeaknessArmorReduction;
+			}
+		}
+		
+		private static void OnRebuildMannequinInstance(On.RoR2.SurvivorMannequins.SurvivorMannequinSlotController.orig_RebuildMannequinInstance originalMethod, RoR2.SurvivorMannequins.SurvivorMannequinSlotController @this) {
+			originalMethod(@this);
+			if (@this.mannequinInstanceTransform != null && @this.currentSurvivorDef == reaver) {
+				Animator previewAnimator = @this.mannequinInstanceTransform.transform.Find("mdlNullifier").GetComponent<Animator>();
+				previewAnimator.SetBool("isGrounded", true); // Fix an animation bug
+				previewAnimator.SetFloat("Spawn.playbackRate", 1f);
+				previewAnimator.Play("Spawn");
+				Util.PlaySound(NullifierSpawnState.spawnSoundString, @this.mannequinInstanceTransform.gameObject);
+				// EffectManager.SimpleMuzzleFlash(NullifierSpawnState.spawnEffectPrefab, @this.mannequinInstanceTransform.gameObject, "PortalEffect", false);
 			}
 		}
 

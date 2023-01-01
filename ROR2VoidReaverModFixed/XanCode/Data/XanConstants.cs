@@ -53,16 +53,6 @@ namespace ROR2VoidReaverModFixed.XanCode.Data {
 			if (!ContentAddition.AddBuffDef(DetainInstability)) {
 				Log.LogWarning("VOID_RIFT_SHOCK is being set to null because something didn't go right in init.");
 				DetainInstability = null;
-			} else {
-				if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("com.xoxfaby.BetterUI")) {
-					Type betterUIBuffs = AppDomain.CurrentDomain.GetAssemblies().SelectMany(asm => asm.GetTypes()).FirstOrDefault(type => type.IsClass && type.Namespace == "BetterUI" && type.Name == "Buffs");
-					if (betterUIBuffs != null) {
-						MethodInfo registerBuffs = betterUIBuffs.GetMethod("RegisterBuffInfo", new Type[] { typeof(BuffDef), typeof(string), typeof(string) });
-						if (registerBuffs != null) {
-							registerBuffs.Invoke(null, new object[] { DetainInstability, "VOID_RIFT_SHOCK_NAME", "VOID_RIFT_SHOCK_DESC" });
-						}
-					}
-				}
 			}
 
 			Log.LogInfo("Constants initialized.");
