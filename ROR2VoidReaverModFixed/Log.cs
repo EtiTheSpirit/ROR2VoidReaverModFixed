@@ -1,15 +1,17 @@
 ﻿using BepInEx.Logging;
 using IL.RoR2;
-using ROR2VoidReaverModFixed.XanCode;
+using System.Diagnostics;
+using System.Reflection;
+using VoidReaverMod.Initialization;
 
-namespace XanVoidReaverEdit {
-	internal static class Log {
-		internal static ManualLogSource _logSource;
+namespace VoidReaverMod
+{
+    internal static class Log {
+		private static ManualLogSource _logSource;
 
 		internal static void Init(ManualLogSource logSource) {
 			_logSource = logSource;
 		}
-
 		private static string ToString(object o) {
 			return o?.ToString() ?? "null";
 		}
@@ -21,9 +23,12 @@ namespace XanVoidReaverEdit {
 		/// <param name="data"></param>
 		internal static void LogTrace(object data) {
 			if (!Configuration.TraceLogging) return;
-			string result = "[TRACE]: ";
-			result += (data?.ToString() ?? "null");
-			_logSource.LogDebug(result);
+			StackTrace stack = new StackTrace();
+			StackFrame super = stack.GetFrame(1);
+			MethodBase caller = super.GetMethod();
+			string result = $"[TRACE // {caller.DeclaringType.Name}::{caller.Name}]: ";
+			result += ToString(data);
+			_logSource.Log(LogLevel.Debug, result);
 		}
 		internal static void LogDebug(object data) => _logSource.LogDebug(ToString(data));
 		internal static void LogError(object data) => _logSource.LogError(ToString(data));

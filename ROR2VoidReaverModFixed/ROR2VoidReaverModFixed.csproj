@@ -13,48 +13,54 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>preview</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <AssemblyVersion>2.0.6.1</AssemblyVersion>
-    <FileVersion>2.0.6.1</FileVersion>
+    <AssemblyVersion>2.0.8.0</AssemblyVersion>
+    <FileVersion>2.0.8.0</FileVersion>
+    <RootNamespace>VoidReaverMod</RootNamespace>
   </PropertyGroup>
 
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <NoWarn>1701;1702;IDE0031</NoWarn>
+    <DefineConstants>$(DefineConstants);USE_VOID_CHARACTER_API</DefineConstants>
   </PropertyGroup>
 
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <NoWarn>1701;1702;IDE0031</NoWarn>
+    <DefineConstants>$(DefineConstants);USE_VOID_CHARACTER_API</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="libs\**" />
+    <Compile Remove="OLD\**" />
     <EmbeddedResource Remove="libs\**" />
+    <EmbeddedResource Remove="OLD\**" />
     <None Remove="libs\**" />
+    <None Remove="OLD\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="icon\Debuff.png" />
-    <None Remove="icon\DefaultPalette.png" />
-    <None Remove="icon\Detain.png" />
-    <None Remove="icon\Dive.png" />
-    <None Remove="icon\Portrait.png" />
-    <None Remove="icon\Reave.png" />
-    <None Remove="icon\Undertow.png" />
-    <None Remove="icon\VoidImpulse.png" />
-    <None Remove="icon\VoidSpread.png" />
+    <None Remove="Resources\Debuff.png" />
+    <None Remove="Resources\DefaultPalette.png" />
+    <None Remove="Resources\Detain.png" />
+    <None Remove="Resources\Dive.png" />
+    <None Remove="Resources\Portrait.png" />
+    <None Remove="Resources\Reave.png" />
+    <None Remove="Resources\Undertow.png" />
+    <None Remove="Resources\VoidImpulse.png" />
+    <None Remove="Resources\VoidSpread.png" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="icon\Debuff.png" />
-    <EmbeddedResource Include="icon\DefaultPalette.png" />
-    <EmbeddedResource Include="icon\Detain.png" />
-    <EmbeddedResource Include="icon\Dive.png" />
-    <EmbeddedResource Include="icon\Portrait.png" />
-    <EmbeddedResource Include="icon\Reave.png" />
-    <EmbeddedResource Include="icon\Undertow.png" />
-    <EmbeddedResource Include="icon\VoidImpulse.png" />
-    <EmbeddedResource Include="icon\VoidSpread.png" />
+    <EmbeddedResource Include="Resources\Debuff.png" />
+    <EmbeddedResource Include="Resources\DefaultPalette.png" />
+    <EmbeddedResource Include="Resources\Detain.png" />
+    <EmbeddedResource Include="Resources\Dive.png" />
+    <EmbeddedResource Include="Resources\Portrait.png" />
+    <EmbeddedResource Include="Resources\Reave.png" />
+    <EmbeddedResource Include="Resources\Undertow.png" />
+    <EmbeddedResource Include="Resources\VoidImpulse.png" />
+    <EmbeddedResource Include="Resources\VoidSpread.png" />
   </ItemGroup>
   
   <ItemGroup>
@@ -104,8 +110,14 @@
       <HintPath>libs\Rewired_Windows_Lib.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="RiskOfOptions">
+      <HintPath>..\..\ROR2SacrificeDropLimiter\SacrificeDropLimiter\libs\RiskOfOptions.dll</HintPath>
+    </Reference>
     <Reference Include="ROR2HPBarAPI">
       <HintPath>..\..\ROR2HPBarAPI\ROR2HPBarAPI\bin\Release\netstandard2.0\ROR2HPBarAPI.dll</HintPath>
+    </Reference>
+    <Reference Include="ROR2VoidPlayerCharacterCommon">
+      <HintPath>..\..\ROR2VoidPlayerCharacterCommon\ROR2VoidPlayerCharacterCommon\bin\Release\netstandard2.0\ROR2VoidPlayerCharacterCommon.dll</HintPath>
     </Reference>
     <Reference Include="SimpleJSON">
       <HintPath>libs\SimpleJSON.dll</HintPath>
@@ -116,4 +128,23 @@
       <Private>false</Private>
     </Reference>
   </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy /Y &quot;$(TargetDir)$(ProjectName).dll&quot; &quot;$(SolutionDir)ModReleasePackage\$(ProjectName).dll&quot;" />
+  </Target>
 </Project>
