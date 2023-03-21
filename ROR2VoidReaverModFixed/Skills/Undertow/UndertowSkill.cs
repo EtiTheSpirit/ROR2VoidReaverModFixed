@@ -14,11 +14,6 @@ namespace VoidReaverMod.Skills.Undertow {
 
 		private const float MAX_AIM_DISTANCE = 200f;
 
-		private readonly float BASE_RAND_RADIUS = Configuration.SecondarySpread;
-
-		private readonly int BASE_BOMB_COUNT = Configuration.SecondaryCount;
-
-		private readonly float BOMB_DAMAGE = Configuration.BaseSecondaryDamage;
 
 		/// <summary>
 		/// The effective radius as influenced by attack speed.
@@ -42,8 +37,8 @@ namespace VoidReaverMod.Skills.Undertow {
 
 		public override void OnEnter() {
 			base.OnEnter();
-			_realRandRadius = BASE_RAND_RADIUS * (0.75f + attackSpeedStat * 0.25f);
-			_realBombCount = Mathf.RoundToInt(attackSpeedStat * BASE_BOMB_COUNT);
+			_realRandRadius = Configuration.SecondarySpread * (0.75f + attackSpeedStat * 0.25f);
+			_realBombCount = Mathf.RoundToInt(attackSpeedStat * Configuration.SecondaryCount);
 			if (isAuthority) {
 				_areaSphere = UnityEngine.Object.Instantiate(ArrowRain.areaIndicatorPrefab);
 				_areaSphere.transform.localScale = Vector3.one * _realRandRadius;
@@ -73,7 +68,8 @@ namespace VoidReaverMod.Skills.Undertow {
 			bool hasReleasedKey = isAuthority && !inputBank.skill2.down;
 			if (hasReleasedKey) {
 				Ray aimRay = GetAimRay();
-				bool hit = Physics.Raycast(aimRay, out RaycastHit castResult, MAX_AIM_DISTANCE);
+				LayerMask hitMask = LayerIndex.world.mask | LayerIndex.enemyBody.mask;
+				bool hit = Physics.Raycast(aimRay, out RaycastHit castResult, MAX_AIM_DISTANCE, hitMask);
 				if (isAuthority) {
 					if (hit) {
 						for (int i = 0; i < _realBombCount; i++) {
@@ -85,8 +81,7 @@ namespace VoidReaverMod.Skills.Undertow {
 							}
 							Vector3 randomSpread = castResult.point + Vector3.up * _realRandRadius + randomDirection;
 							float randDiameter = _realRandRadius * 2f;
-							LayerMask mask = LayerIndex.world.mask | LayerIndex.enemyBody.mask;
-							bool hitSpread = Physics.Raycast(randomSpread, Vector3.down, out RaycastHit randomSpreadHit, randDiameter, mask);
+							bool hitSpread = Physics.Raycast(randomSpread, Vector3.down, out RaycastHit randomSpreadHit, randDiameter, hitMask);
 							if (hitSpread) {
 								randomSpread = randomSpreadHit.point;
 							} else {
@@ -97,7 +92,7 @@ namespace VoidReaverMod.Skills.Undertow {
 								randomSpread,
 								Quaternion.identity,
 								gameObject,
-								damageStat * BOMB_DAMAGE,
+								damageStat * Configuration.BaseSecondaryDamage,
 								200f,
 								Util.CheckRoll(critStat, characterBody.master),
 								DamageColorIndex.Void

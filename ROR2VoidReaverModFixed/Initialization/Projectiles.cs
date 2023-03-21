@@ -48,14 +48,14 @@ namespace VoidReaverMod.Initialization {
 			ProjectileController secondaryController = UndertowProjectile.GetComponent<ProjectileController>();
 			ProjectileImpactExplosion secondaryExplosion = UndertowProjectile.GetComponent<ProjectileImpactExplosion>();
 			ProjectileDamage secondaryDamage = UndertowProjectile.GetComponent<ProjectileDamage>();
+			UndertowProjectile.AddComponent<ModdedDamageTypeHolderComponent>().Add(CustomDurationNullify);
 			secondaryExplosion.blastProcCoefficient = 1f;
 			secondaryExplosion.blastDamageCoefficient = 1f;
 			secondaryExplosion.lifetime = 0.75f;
 			secondaryExplosion.lifetimeRandomOffset = 0.25f;
 			secondaryController.procCoefficient = 1f;
 			secondaryDamage.damageColorIndex = DamageColorIndex.Void;
-			secondaryDamage.damageType = DamageType.Nullify; // This causes the Nullify effect. (this is no longer needed, as it is manually applied)
-			UndertowProjectile.AddComponent<ModdedDamageTypeHolderComponent>().Add(CustomDurationNullify);
+			secondaryDamage.damageType = DamageType.Nullify; // This causes the Nullify effect.
 			ContentAddition.AddProjectile(UndertowProjectile);
 			Log.LogTrace("Registered secondary projectile");
 
