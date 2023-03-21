@@ -47,7 +47,7 @@ namespace VoidReaverMod.Skills.Primary {
 			Duration = BaseDuration;
 			_bulletsPerStringShot = Configuration.BulletsPerImpulseShot;
 			_bulletIndex = 0;
-			_spread = Configuration.PrimaryImpulseSpread;
+			_spread = Configuration.PrimaryImpulseSpread.Vector;
 			if (Configuration.UseExperimentalSequenceShotBuff) {
 				// This is a bit complicated because these behaviors are so different. The names of the variables should help, as well as their documentation.
 				// It may help to think of each shot as a "slot" in a sequence.

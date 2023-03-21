@@ -18,6 +18,7 @@ namespace VoidReaverMod.Skills.SpecialSkills {
 			healthCmp.barrier = 0;
 			if (NetworkServer.active) {
 				healthCmp.Suicide(gameObject, gameObject, DamageType.BypassArmor | DamageType.BypassBlock | DamageType.BypassOneShotProtection | DamageType.Silent);
+				healthCmp.killingDamageType = DamageType.VoidDeath; // For the sake of the message.
 			}
 			outer.SetNextStateToMain();
 		}

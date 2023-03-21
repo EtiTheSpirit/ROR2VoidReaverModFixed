@@ -9,6 +9,7 @@ using BepInEx.Bootstrap;
 using VoidReaverMod.Initialization;
 using VoidReaverMod.Survivor;
 using VoidReaverMod.Buffs;
+using Xan.ROR2VoidPlayerCharacterCommon.ROOInterop;
 
 namespace VoidReaverMod
 {
@@ -27,15 +28,17 @@ namespace VoidReaverMod
 		public const string PLUGIN_AUTHOR = "Xan";
 		public const string PLUGIN_NAME = "VoidReaverPlayerCharacter";
 		public const string DISPLAY_NAME = "Void Reaver Player Character";
-		public const string VERSION = "3.0.0";
+		public const string VERSION = "4.0.0";
 
 		void Awake() {
-			Log.Init(Logger);
-			Configuration.Init(Config);
-			Projectiles.Init();
-			Localization.Init();
-			BuffProvider.Init();
-			VoidReaverSurvivor.Init(this);
+			Log.Initialize(Logger);
+			Configuration.Initialize(Config);
+			Projectiles.Initialize();
+			Localization.Initialize();
+			BuffProvider.Initialize();
+			EffectProvider.Initialize();
+			NullifyDamageWithCustomDuration.Initialize();
+			VoidReaverSurvivor.Initialize(this);
 		}
 
 	}

@@ -42,6 +42,10 @@ namespace VoidReaverMod.Initialization {
 		public const string VOID_RIFT_SHOCK_NAME = "VOID_RIFT_SHOCK_NAME";
 		public const string VOID_RIFT_SHOCK_DESC = "VOID_RIFT_SHOCK_DESC";
 
+		public const string VOID_COMMON_API_MESSAGE_NAME = "VOID_COMMON_API_MESSAGE_NAME";
+		public const string VOID_COMMON_API_MESSAGE_DESC = "VOID_COMMON_API_MESSAGE_DESC";
+		public const string VOID_COMMON_API_MESSAGE_CONTENT = "VOID_COMMON_API_MESSAGE_CONTENT";
+
 		private const string SKULL = "<sprite name=\"Skull\" tint=1>";
 
 
@@ -95,12 +99,17 @@ namespace VoidReaverMod.Initialization {
 		}
 
 		private static void Bind(string key, string value) {
-			Log.LogTrace($"Registering language key \"{key}\"...");
+			Log.LogTrace($"Registering language key \"{key}\" if not present...");
 			LanguageAPI.Add(key, value);
 		}
 
+		private static void ReplaceBind(string key, string value) {
+			Log.LogTrace($"Overwriting language key \"{key}\"...");
+			XanVoidAPI.AddOrReplaceLang(key, value);
+		}
+
 #pragma warning disable CS0618
-		public static void Init() {
+		public static void Initialize() {
 
 			#region Name and Lore
 			Bind(SURVIVOR_NAME, "Void Reaver");
@@ -123,30 +132,22 @@ namespace VoidReaverMod.Initialization {
 			#endregion
 
 			#region Passive
-			string voidBornIntro = "The Void Jailer inherits all of the benefits and drawbacks of its kin.";
+			string voidBornIntro = "The Void Reaver inherits all of the benefits and drawbacks of its kin.";
 			Bind(PASSIVE_NAME, "<style=cIsVoid>Void Entity</style>");
 			Bind(PASSIVE_DESC, voidBornIntro);
 			#endregion
 
 			#region Primary Attack
 			Bind(SKILL_PRIMARY_TRIPLESHOT_NAME, "Void Impulse");
-			if (Configuration.UseExperimentalSequenceShotBuff) {
-				Bind(SKILL_PRIMARY_TRIPLESHOT_DESC, $"Fire <style=cUserSetting>{Configuration.BulletsPerImpulseShot}</style> bursts of <style=cIsVoid>void pearls</style> in quick succession that hit twice for <style=cIsDamage>2x{Percentage(Configuration.BasePrimaryDamage / 2)} damage</style>. <style=cIsUtility>Attack speed</style> increases <style=cIsUtility>the number of pearls</style> fired in each burst.");
-			} else {
-				Bind(SKILL_PRIMARY_TRIPLESHOT_DESC, $"Fire <style=cUserSetting>{Configuration.BulletsPerImpulseShot}</style> <style=cIsVoid>void pearls</style> in quick succession that hit twice for <style=cIsDamage>2x{Percentage(Configuration.BasePrimaryDamage / 2)} damage</style>. <style=cIsUtility>Attack speed</style> increases <style=cIsUtility>the number of pearls</style> that are fired.");
-			}
 			Bind(SKILL_PRIMARY_SPREAD_NAME, "Void Spread");
-			Bind(SKILL_PRIMARY_SPREAD_DESC, $"Fire <style=cUserSetting>{Configuration.BulletsPerSpreadShot}</style> <style=cIsVoid>void pearls</style> that each hit twice for <style=cIsDamage>2x{Percentage(Configuration.BasePrimaryDamage / 2)} damage</style>. The pearls are shot in a <style=cUserSetting>{Round(Configuration.SpreadShotArcLengthDegs)} degree horizontal spread</style>.");
 			#endregion
 
 			#region Secondary Attack
 			Bind(SKILL_SECONDARY_NAME, "Undertow");
-			Bind(SKILL_SECONDARY_DESC, $"Create a cluster of <style=cUserSetting>{Configuration.SecondaryCount}</style> bombs that each deal <style=cIsDamage>{Percentage(Configuration.BaseSecondaryDamage)} damage</style>. Inflicts <style=cIsVoid>Nullify Stack</style>. <style=cIsUtility>Attack speed</style> increases the number of bombs and the placement radius.");
 			#endregion
 
 			#region Utility
 			Bind(SKILL_UTILITY_NAME, "Dive");
-			Bind(SKILL_UTILITY_DESC, $"Propel yourself through the void at <style=cUserSetting>{Percentage(Configuration.UtilitySpeed)} movement speed</style> for <style=cUserSetting>{RoundTen(Configuration.UtilityDuration)} {LazyPluralize("second", Configuration.UtilityDuration)}</style>, healing <style=cIsHealing>{Percentage(Configuration.UtilityRegen)} maximum health</style>. Gain <style=cIsUtility>Immunity</style> and <style=cIsUtility>Invisibility</style> while away.");
 			#endregion
 
 			#region Special
@@ -158,18 +159,44 @@ namespace VoidReaverMod.Initialization {
 
 			#region Interoperability
 			Bind(VOID_RIFT_SHOCK_NAME, "Void Rift Shock");
-			Bind(VOID_RIFT_SHOCK_DESC, $"Forcefully ripping The Void open has reduced your <style=cIsUtility>Armor</style> by <style=cUserSetting>{Configuration.DetainWeaknessArmorReduction}</style>.");
 			#endregion
+
+			Bind(VOID_COMMON_API_MESSAGE_NAME, "<style=cDeath>Mod Update Message</style>");
+			Bind(VOID_COMMON_API_MESSAGE_DESC, "There's important information for both new and old users. Hover for more.");
+			Bind(VOID_COMMON_API_MESSAGE_CONTENT, "A huge rewrite has just occurred to the core systems for this mod.\n\nFirstly, <style=cIsVoid>the ability to edit stats and configs in realtime</style> has been added. Additionally, <style=cIsVoid>these settings automatically synchronize over the network from the host!</style>\n\nSecondly, some stats and mechanics (especially with respect to the black hole) have changed. <style=cIsDamage>In general, if something isn't working like it used to, the option to change it back is <i>probably</i> in the configs.</style> Try checking there if anything seems off.\n\nFinally, it is <style=cDeath>strongly recommended to use the in-game configuration screen</style> (from Risk of Options) instead of the r2modman/Thunderstore menu. It will be a <i>lot</i> easier.\n\n<style=cIsHealing>Try it now! You can turn this message off in the mod's settings.</style>");
 		}
 
-		public static void LateInit(BodyIndex reaver) {
+		/// <summary>
+		/// For use when configs change. Registers all stat-dependent strings.
+		/// </summary>
+		/// <param name="reaver"></param>
+		public static void ReloadStattedTexts(BodyIndex reaver) {
+			LateInit(reaver);
+			if (Configuration.UseExperimentalSequenceShotBuff) {
+				ReplaceBind(SKILL_PRIMARY_TRIPLESHOT_DESC, $"Fire <style=cUserSetting>{Configuration.BulletsPerImpulseShot}</style> bursts of <style=cIsVoid>void pearls</style> in quick succession that hit twice for <style=cIsDamage>2x{Percentage(Configuration.BasePrimaryDamage / 2)} damage</style>. <style=cIsUtility>Attack speed</style> increases <style=cIsUtility>the number of pearls</style> fired in each burst.");
+			} else {
+				ReplaceBind(SKILL_PRIMARY_TRIPLESHOT_DESC, $"Fire <style=cUserSetting>{Configuration.BulletsPerImpulseShot}</style> <style=cIsVoid>void pearls</style> in quick succession that hit twice for <style=cIsDamage>2x{Percentage(Configuration.BasePrimaryDamage / 2)} damage</style>. <style=cIsUtility>Attack speed</style> increases <style=cIsUtility>the number of pearls</style> that are fired.");
+			}
+			ReplaceBind(SKILL_PRIMARY_SPREAD_DESC, $"Fire <style=cUserSetting>{Configuration.BulletsPerSpreadShot}</style> <style=cIsVoid>void pearls</style> that each hit twice for <style=cIsDamage>2x{Percentage(Configuration.BasePrimaryDamage / 2)} damage</style>. The pearls are shot in a <style=cUserSetting>{Round(Configuration.SpreadShotArcLengthDegs)} degree horizontal spread</style>.");
+			string baseSecondaryDesc = $"Create a cluster of <style=cUserSetting>{Configuration.SecondaryCount}</style> bombs that each deal <style=cIsDamage>{Percentage(Configuration.BaseSecondaryDamage)} damage</style>. Inflicts <style=cIsVoid>Nullify Stack</style>. <style=cIsUtility>Attack speed</style> increases the number of bombs and the placement radius. ";
+			if (Configuration.NullifyDurationMonsters == Configuration.NullifyDurationBosses) {
+				baseSecondaryDesc += $"Fully stacked <style=cIsVoid>Nullify</style> lasts for <style=cUserSetting>{RoundTen(Configuration.NullifyDurationMonsters)} seconds</style>.";
+			} else {
+				baseSecondaryDesc += $"Fully stacked <style=cIsVoid>Nullify</style> lasts for <style=cUserSetting>{RoundTen(Configuration.NullifyDurationMonsters)} seconds</style> on <style=cIsDamage>monsters</style>, and <style=cUserSetting>{RoundTen(Configuration.NullifyDurationBosses)} seconds</style> on <style=cIsDamage>bosses</style>.";
+			}
+			ReplaceBind(SKILL_SECONDARY_DESC, baseSecondaryDesc);
+			ReplaceBind(SKILL_UTILITY_DESC, $"Propel yourself through the void at <style=cUserSetting>{Percentage(Configuration.UtilitySpeed)} movement speed</style> for <style=cUserSetting>{RoundTen(Configuration.UtilityDuration)} {LazyPluralize("second", Configuration.UtilityDuration)}</style>, healing <style=cIsHealing>{Percentage(Configuration.UtilityRegen)} maximum health</style>. Gain <style=cIsUtility>Immunity</style> and <style=cIsUtility>Invisibility</style> while away.");
+			ReplaceBind(VOID_RIFT_SHOCK_DESC, $"Forcefully ripping The Void open has reduced your <style=cIsUtility>Armor</style> by <style=cUserSetting>{Configuration.DetainWeaknessArmorReduction}</style>.");
+		}
+
+		private static void LateInit(BodyIndex reaver) {
 			string blackHoleDesc = XanVoidAPI.BuildBlackHoleDescription(reaver, true);
 			string desc = $"[ Reave ]\n<style=cSub>Upon death, {blackHoleDesc}";
 			desc += "\n\n[ Void Entity ]\n<style=cSub>The Void Reaver is <style=cIsUtility>immune</style> to <style=cIsVoid>Void Fog</style>, and will not take damage within <style=cIsVoid>Void Seeds</style> or whilst outside the range of a protective bubble in Void environments.</style>";
 
 			Bind(PASSIVE_KEYWORD, desc);
-			Bind(SKILL_SPECIAL_WEAK_DESC, $"Sacrifice <style=cIsHealth>{Percentage(Configuration.DetainCost)} of your health</style>{(Configuration.DetainWeaknessDuration > 0 ? $" and get <style=cIsDamage>Void Rift Shock</style> for <style=cUserSetting>{Configuration.DetainWeaknessDuration}</style> seconds (reducing <style=cIsUtility>Armor</style> by <style=cUserSetting>{Configuration.DetainWeaknessArmorReduction}</style>)" : string.Empty)} to trigger a weaker form of <style=cIsVoid>Reave</style>, dealing <style=cIsDamage>{Percentage(Configuration.BaseSpecialDamage)} damage</style> to all monsters {(XanVoidAPI.CanCharacterFriendlyFire(reaver) ? "<style=cIsDamage>and players</style> " : string.Empty)}caught within.");
-			Bind(SKILL_SPECIAL_SUICIDE_DESC, $"<style=cDeath>{SKULL} Extinguish your life {SKULL}</style> to {blackHoleDesc}");
+			ReplaceBind(SKILL_SPECIAL_WEAK_DESC, $"Sacrifice <style=cIsHealth>{Percentage(Configuration.DetainCost)} of your health</style>{(Configuration.DetainWeaknessDuration > 0 ? $" and get <style=cIsDamage>Void Rift Shock</style> for <style=cUserSetting>{Configuration.DetainWeaknessDuration}</style> seconds (reducing <style=cIsUtility>Armor</style> by <style=cUserSetting>{Configuration.DetainWeaknessArmorReduction}</style>)" : string.Empty)} to trigger a weaker form of <style=cIsVoid>Reave</style>, dealing <style=cIsDamage>{Percentage(XanVoidAPI.GetFallbackDamage(reaver))} damage</style> to all monsters {(XanVoidAPI.CanCharacterFriendlyFire(reaver) ? "<style=cIsDamage>and players</style> " : string.Empty)}caught within.");
+			ReplaceBind(SKILL_SPECIAL_SUICIDE_DESC, $"<style=cDeath>{SKULL} Extinguish your life {SKULL}</style> to {blackHoleDesc}");
 		}
 #pragma warning restore CS0618
 

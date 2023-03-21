@@ -17,7 +17,7 @@ namespace VoidReaverMod.Skills.Primary {
 		public override void OnEnter() {
 			base.OnEnter();
 			Duration = BaseDuration / attackSpeedStat;
-			_spread = Configuration.PrimarySpreadShotSpread;
+			_spread = Configuration.PrimarySpreadShotSpread.Vector;
 			Util.PlayAttackSpeedSound(FireLunarNeedle.fireSound, gameObject, 0.75f);
 			Util.PlayAttackSpeedSound(FireLunarNeedle.fireSound, gameObject, 1f);
 			Util.PlayAttackSpeedSound(FireLunarNeedle.fireSound, gameObject, 1.25f);

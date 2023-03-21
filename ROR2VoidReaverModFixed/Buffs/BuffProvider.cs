@@ -17,7 +17,7 @@ namespace VoidReaverMod.Buffs {
 		/// </summary>
 		public static BuffDef VoidRiftShock { get; private set; }
 
-		internal static void Init() {
+		internal static void Initialize() {
 			Log.LogTrace("Creating buffs...");
 			VoidRiftShock = ScriptableObject.CreateInstance<BuffDef>();
 			VoidRiftShock.isDebuff = true;

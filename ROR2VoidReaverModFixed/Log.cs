@@ -9,7 +9,7 @@ namespace VoidReaverMod
     internal static class Log {
 		private static ManualLogSource _logSource;
 
-		internal static void Init(ManualLogSource logSource) {
+		internal static void Initialize(ManualLogSource logSource) {
 			_logSource = logSource;
 		}
 		private static string ToString(object o) {
@@ -22,7 +22,7 @@ namespace VoidReaverMod
 		/// </summary>
 		/// <param name="data"></param>
 		internal static void LogTrace(object data) {
-			if (!Configuration.TraceLogging) return;
+			if (!Configuration.CommonVoidEnemyConfigs.TraceLogging) return;
 			StackTrace stack = new StackTrace();
 			StackFrame super = stack.GetFrame(1);
 			MethodBase caller = super.GetMethod();

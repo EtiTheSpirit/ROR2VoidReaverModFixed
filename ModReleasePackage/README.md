@@ -3,7 +3,6 @@ An expansion upon [LuaFubuki's Void Reaver Mod](https://thunderstore.io/package/
 
 ## Features
 * All abilities of LuaFubuki's original Void Reaver mod.
-* The addition of the **Collapse** special, the more aggressive alternative to **Reave**. Kill yourself ~~immediately~~ to trigger the Void Reaver's death implosion.
 * (Optional) Fresh icons for all the abilities and the survivor.
 * Tons of new configuration options to personalize your experience and tweak nearly all facets of the mod.
 
@@ -14,6 +13,7 @@ An expansion upon [LuaFubuki's Void Reaver Mod](https://thunderstore.io/package/
 ## Need to contact me?
 * You can find me in the RoR2 modding discord. I am nicknamed `Xan`, my discriminator is #1760.
 * If you prefer another way, I have a website https://etithespir.it/ with more methods.
+* I have a Discord server for my mods, you can join it [here](https://discord.gg/YGJ7a44UEE).
 
 ## Known Bugs / To-Do List (Fixes)
 * There are no currently known bugs.

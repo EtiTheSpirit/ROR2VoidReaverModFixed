@@ -8,6 +8,7 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using Xan.ROR2VoidPlayerCharacterCommon;
 using Xan.ROR2VoidPlayerCharacterCommon.DamageBehavior;
+using static R2API.DamageAPI;
 
 namespace VoidReaverMod.Initialization {
 	public static class Projectiles {
@@ -16,16 +17,20 @@ namespace VoidReaverMod.Initialization {
 
 		public static GameObject UndertowProjectile { get; private set; }
 
-		public static GameObject NonInstakillVoidDeathProjectile { get; private set; }
+		// public static GameObject NonInstakillVoidDeathProjectile { get; private set; }
+
+		public static ModdedDamageType CustomDurationNullify { get; private set; }
 
 
-		internal static void Init() {
+		internal static void Initialize() {
 			VoidPearlProjectile = PrefabAPI.InstantiateClone(Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarSkillReplacements/LunarNeedleProjectile.prefab").WaitForCompletion(), "VoidPrimaryAttack", true);
+			/*
 			if (Configuration.UseFullSizeCharacter) {
 				// We ARE using full size character
 				VoidPearlProjectile.transform.localScale *= 2f;
 				Log.LogTrace("Upscaling primary projectile by 2x due to using full size player model...");
 			}
+			*/
 			ProjectileController primaryController = VoidPearlProjectile.GetComponent<ProjectileController>();
 			ProjectileImpactExplosion primaryExplosion = VoidPearlProjectile.GetComponent<ProjectileImpactExplosion>();
 			ProjectileDamage primaryDamage = VoidPearlProjectile.GetComponent<ProjectileDamage>();
@@ -37,6 +42,8 @@ namespace VoidReaverMod.Initialization {
 			ContentAddition.AddProjectile(VoidPearlProjectile);
 			Log.LogTrace("Registered primary projectile (\"Void Pearls\")");
 
+			CustomDurationNullify = ReserveDamageType();
+
 			UndertowProjectile = PrefabAPI.InstantiateClone(Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Nullifier/NullifierPreBombProjectile.prefab").WaitForCompletion(), "VoidSecondaryAttack");
 			ProjectileController secondaryController = UndertowProjectile.GetComponent<ProjectileController>();
 			ProjectileImpactExplosion secondaryExplosion = UndertowProjectile.GetComponent<ProjectileImpactExplosion>();
@@ -47,16 +54,18 @@ namespace VoidReaverMod.Initialization {
 			secondaryExplosion.lifetimeRandomOffset = 0.25f;
 			secondaryController.procCoefficient = 1f;
 			secondaryDamage.damageColorIndex = DamageColorIndex.Void;
-			secondaryDamage.damageType = DamageType.Nullify; // This causes the Nullify effect.
+			secondaryDamage.damageType = DamageType.Nullify; // This causes the Nullify effect. (this is no longer needed, as it is manually applied)
+			UndertowProjectile.AddComponent<ModdedDamageTypeHolderComponent>().Add(CustomDurationNullify);
 			ContentAddition.AddProjectile(UndertowProjectile);
 			Log.LogTrace("Registered secondary projectile");
 
+			/*
 			NonInstakillVoidDeathProjectile = PrefabAPI.InstantiateClone(VoidImplosionObjects.NullifierImplosion, "NullifierImplosionNoVoidDeath");
 			NonInstakillVoidDeathProjectile.GetComponent<ProjectileDamage>().damageType &= ~DamageType.VoidDeath;
 			NonInstakillVoidDeathProjectile.GetComponent<DamageAPI.ModdedDamageTypeHolderComponent>().Remove(VoidDamageTypes.ConditionalVoidDeath);
 			ContentAddition.AddProjectile(NonInstakillVoidDeathProjectile);
 			Log.LogTrace("Registered nonlethal black hole");
-
+			*/
 		}
 
 	}

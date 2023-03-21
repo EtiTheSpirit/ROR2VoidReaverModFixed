@@ -65,9 +65,9 @@ namespace VoidReaverMod.Skills.SpecialSkills {
 			if (NetworkServer.active && muzzleTransform != null) {
 				ProjectileManager.instance.FireProjectile(GetVoidExplosionFireInfo(
 					this,
-					Projectiles.NonInstakillVoidDeathProjectile, //VoidImplosionObjects.NullifierImplosion,
+					VoidImplosionObjects.NoInstakillNullifierImplosion,
 					muzzleTransform,
-					Configuration.BaseSpecialDamage
+					Configuration.DetainDamage
 				));
 			} else if (muzzleTransform == null) {
 				Log.LogError("WARNING: Failed to execute Reave ability! The character does not have a muzzle transform. Were you deleted or something? You good? Did the furries read \"muzzle\" and steal it for their diabolical activities (if so then lmao also L)?");

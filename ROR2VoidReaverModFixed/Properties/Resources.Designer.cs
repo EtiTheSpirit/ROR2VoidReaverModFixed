@@ -93,6 +93,16 @@ namespace VoidReaverMod.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
+        internal static byte[] Generic_Warning {
+            get {
+                object obj = ResourceManager.GetObject("Generic_Warning", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
         internal static byte[] Portrait {
             get {
                 object obj = ResourceManager.GetObject("Portrait", resourceCulture);

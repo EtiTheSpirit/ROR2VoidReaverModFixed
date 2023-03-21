@@ -7,6 +7,18 @@ using UnityEngine;
 namespace VoidReaverMod.Initialization.Sprites {
 	public static class Images {
 
+		public static Sprite GenericWarning {
+			get {
+				if (_genericWarning == null) {
+					using (MemoryStream stream = new MemoryStream(Properties.Resources.Generic_Warning)) {
+						_genericWarning = ImageHelper.CreateSprite(stream);
+					}
+				}
+				return _genericWarning;
+			}
+		}
+		private static Sprite _genericWarning = null;
+
 		public static Sprite Portrait {
 			get {
 				if (_portrait == null) {

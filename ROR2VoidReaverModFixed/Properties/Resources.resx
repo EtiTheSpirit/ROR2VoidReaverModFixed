@@ -127,6 +127,9 @@
   <data name="Dive2" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\dive2.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="Generic_Warning" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Generic Warning.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="Portrait" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\portrait.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>

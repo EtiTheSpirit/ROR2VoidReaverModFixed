@@ -45,7 +45,7 @@ namespace VoidReaverMod.Skills.Death {
 			PlayCrossfade("Body", "Death", "Death.playbackRate", 3f, 0.1f);
 			if (isAuthority) {
 				Transform muzzleTransform = FindModelChild(muzzleName);
-				if (muzzleTransform == null) { muzzleTransform = gameObject.transform; }
+				if (muzzleTransform == null) muzzleTransform = gameObject.transform;
 				if (muzzleTransform != null) {
 					ProjectileManager.instance.FireProjectile(BlackHoleOnDemandSkill.GetVoidExplosionFireInfo(
 						this,
